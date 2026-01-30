@@ -92,6 +92,6 @@ tmp/
 temp/
 *.
 #migration files
-.accounts/migrations/0001_initial.py
-.accounts/migrations/0002_alter_user_phone_number_alter_user_user_type.py
-.accounts/migrations/0003_alter_user_phone_number.py
+**/migrations/*
+!**/migrations/__init__.py
+
