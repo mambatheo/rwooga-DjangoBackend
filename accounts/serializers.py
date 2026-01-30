@@ -7,9 +7,8 @@ from .models import User, VerificationCode
 import datetime
 
 
-class UserSerializer(serializers.ModelSerializer):
-   
-    full_name = serializers.SerializerMethodField()
+class UserSerializer(serializers.ModelSerializer): 
+    
     
     class Meta:
         model = User
