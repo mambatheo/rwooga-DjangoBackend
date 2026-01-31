@@ -82,15 +82,35 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return user
 
 
-class VerifyEmailSerializer(serializers.Serializer):   
-    
+class VerifyEmailSerializer(serializers.Serializer):
+
     email = serializers.EmailField(required=True)
-    code = serializers.CharField(required=True, max_length=6, min_length=6)
-    
-    def validate_code(self, value):     
-        if not value.isdigit():
-            raise serializers.ValidationError("Code must be 6 digits")
-        return value
+    token = serializers.UUIDField(required=True)
+
+    def validate(self, attrs):
+        email = attrs['email']
+        token = attrs['token']
+
+        verification = VerificationCode.objects.filter(
+            email=email,
+            token=token,
+            label=VerificationCode.REGISTER,
+            is_used=False
+        ).first()
+
+        if not verification:
+            raise serializers.ValidationError(
+                "Invalid verification link."
+            )
+
+        if verification.is_expired:
+            raise serializers.ValidationError(
+                "Verification link has expired."
+            )
+
+        # Attach for use in the view
+        attrs['verification'] = verification
+        return attrs
 
 
 class ChangePasswordSerializer(serializers.Serializer):    
@@ -134,18 +154,13 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 class PasswordResetConfirmSerializer(serializers.Serializer):  
     
     email = serializers.EmailField(required=True)
-    code = serializers.CharField(required=True, max_length=6, min_length=6)
+    token = serializers.UUIDField(required=True)  # changed from code to token
     new_password = serializers.CharField(
         required=True,
         write_only=True,
         validators=[validate_password]
     )
     new_password_confirm = serializers.CharField(required=True, write_only=True)
-    
-    def validate_code(self, value):       
-        if not value.isdigit():
-            raise serializers.ValidationError("Code must be 6 digits")
-        return value
     
     def validate(self, attrs):
         if attrs['new_password'] != attrs['new_password_confirm']:
@@ -159,8 +174,8 @@ class VerificationCodeSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = VerificationCode
-        fields = ['id', 'code', 'label', 'email', 'created_on', 'is_valid']
-        read_only_fields = ['id', 'created_on', 'is_valid']
+        fields = ['id', 'token', 'label', 'email', 'created_on', 'is_valid']
+        read_only_fields = ['id', 'token', 'created_on', 'is_valid']
 
 
 class UserProfileSerializer(serializers.ModelSerializer):  

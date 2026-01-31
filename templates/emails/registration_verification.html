@@ -28,6 +28,20 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
         
+        .logo-section {
+            background-color: #ffffff;
+            padding: 30px 30px 20px;
+            text-align: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .logo-section img {
+            max-width: 200px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        
         .email-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #ffffff;
@@ -63,38 +77,55 @@
             margin-bottom: 30px;
         }
         
-        .code-container {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            border-radius: 8px;
-            padding: 30px;
+        .button-container {
             text-align: center;
-            margin: 30px 0;
-            border: 2px dashed #667eea;
+            margin: 35px 0;
         }
         
-        .code-label {
-            font-size: 14px;
-            color: #666666;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
+        .verify-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff !important;
+            padding: 16px 50px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 16px;
             font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
         
-        .verification-code {
-            font-size: 42px;
-            font-weight: 700;
-            color: #667eea;
-            letter-spacing: 8px;
-            font-family: 'Courier New', monospace;
-            margin: 10px 0;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        .verify-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
         }
         
-        .code-expiry {
+        .link-expiry {
+            text-align: center;
             font-size: 13px;
             color: #999999;
             margin-top: 15px;
+        }
+        
+        .alternative-link {
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 25px 0;
+            word-break: break-all;
+        }
+        
+        .alternative-link p {
+            font-size: 12px;
+            color: #666666;
+            margin-bottom: 8px;
+        }
+        
+        .alternative-link a {
+            font-size: 12px;
+            color: #667eea;
+            text-decoration: none;
         }
         
         .warning-box {
@@ -130,27 +161,6 @@
             color: #1565c0;
             font-size: 13px;
             margin: 0;
-        }
-        
-        .button-container {
-            text-align: center;
-            margin: 30px 0;
-        }
-        
-        .button {
-            display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #ffffff;
-            padding: 14px 40px;
-            text-decoration: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 600;
-            transition: transform 0.2s;
-        }
-        
-        .button:hover {
-            transform: translateY(-2px);
         }
         
         .divider {
@@ -201,6 +211,17 @@
             font-size: 12px;
         }
         
+        .social-links img {
+            width: 24px;
+            height: 24px;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+        
+        .social-links img:hover {
+            opacity: 1;
+        }
+        
         .copyright {
             font-size: 11px;
             color: #bbbbbb;
@@ -210,6 +231,14 @@
         @media only screen and (max-width: 600px) {
             body {
                 padding: 10px;
+            }
+            
+            .logo-section {
+                padding: 20px 15px 15px;
+            }
+            
+            .logo-section img {
+                max-width: 150px;
             }
             
             .email-header {
@@ -224,22 +253,23 @@
                 padding: 30px 20px;
             }
             
-            .verification-code {
-                font-size: 36px;
-                letter-spacing: 6px;
-            }
-            
-            .code-container {
-                padding: 20px;
+            .verify-button {
+                padding: 14px 40px;
+                font-size: 15px;
             }
         }
     </style>
 </head>
 <body>
     <div class="email-container">
+        <!-- Logo Section -->
+        <div class="logo-section">
+            <img src="{{ company_logo_url }}" alt="{{ company_name }} Logo">
+        </div>
+        
         <!-- Header -->
         <div class="email-header">
-            <h1> Welcome </h1>
+            <h1> Welcome!</h1>
             <p>You're just one step away from getting started</p>
         </div>
         
@@ -250,24 +280,31 @@
             </div>
             
             <div class="message">
-                Thank you for registering with us! We're excited to have you on board. To complete your registration and activate your account, please verify your email address using the code below.
+                Thank you for registering with us! We're excited to have you on board. To complete your registration and activate your account, please verify your email address by clicking the button below.
             </div>
             
-            <!-- Verification Code -->
-            <div class="code-container">
-                <div class="code-label">Your Verification Code</div>
-                <div class="verification-code">{{ code }}</div>
-                <div class="code-expiry">⏱ This code expires in {{ expiry_minutes }} minutes</div>
+            <!-- Verification Button -->
+            <div class="button-container">
+                <a href="{{ verification_link }}" class="verify-button">
+                    Verify Email Address
+                </a>
+                <div class="link-expiry">⏱ This link expires in {{ expiry_minutes }} minutes</div>
             </div>
             
             <div class="info-box">
-                <p><strong> How to verify:</strong> Enter this code in the verification field on the app or website to activate your account.</p>
+                <p><strong> One-click verification:</strong> Simply click the button above to instantly activate your account. No code needed!</p>
+            </div>
+            
+            <!-- Alternative Link -->
+            <div class="alternative-link">
+                <p><strong>Button not working?</strong> Copy and paste this link into your browser:</p>
+                <a href="{{ verification_link }}">{{ verification_link }}</a>
             </div>
             
             <!-- Warning -->
             <div class="warning-box">
                 <strong> Security Notice</strong>
-                <p>If you didn't create an account with us, please ignore this email. The verification code will expire automatically and your email will not be registered.</p>
+                <p>If you didn't create an account with us, please ignore this email. The verification link will expire automatically and your email will not be registered.</p>
             </div>
             
             <div class="divider"></div>
@@ -287,7 +324,7 @@
             
             <div class="signature">
                 Best regards,<br>
-                <strong>The Team</strong>
+                <strong> {{ company_name }} Team</strong>
             </div>
         </div>
         
@@ -296,13 +333,19 @@
             <p>This is an automated message, please do not reply to this email.</p>
             
             <div class="social-links">
-                <a href="#">logo here</a> • 
-                <a href="#">logo here</a> • 
-                <a href="#">logo here</a>
+                <a href="{{ social_instagram }}" title="Instagram">
+                    <img src="{{ instagram_icon_url }}" alt="Instagram">
+                </a>
+                <a href="{{ social_twitter }}" title="Twitter">
+                    <img src="{{ twitter_icon_url }}" alt="Twitter">
+                </a>
+                <a href="{{ social_facebook }}" title="Facebook">
+                    <img src="{{ facebook_icon_url }}" alt="Facebook">
+                </a>
             </div>
             
             <div class="copyright">
-                © 2025 {{ company_name }}. All rights reserved.
+                © 2026 {{ company_name }}. All rights reserved.
             </div>
         </div>
     </div>

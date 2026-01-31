@@ -1,4 +1,5 @@
 from django.test import TestCase
+from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework import status
@@ -60,10 +61,10 @@ class UserLoginTestCase(TestCase):
         self.assertIn('access', response.data)
         self.assertIn('refresh', response.data)
 
-    def test_login_invalid_credentials(self):
+    def test_login_invalid_credentials(self):      
         data = {'email': 'mutheo2026@gmail.com', 'password': 'wrongpassword'}
         response = self.client.post(self.login_url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class UserLogoutTestCase(TestCase):
@@ -83,7 +84,7 @@ class UserLogoutTestCase(TestCase):
         self.client.force_authenticate(user=self.user)
         data = {'refresh': str(refresh)}
         response = self.client.post(self.logout_url, data, format='json')
-        self.assertIn(response.status_code, [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST])
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 class PasswordResetTestCase(TestCase):
@@ -99,20 +100,31 @@ class PasswordResetTestCase(TestCase):
         self.reset_request_url = '/auth/password_reset_request/'
         self.reset_confirm_url = '/auth/password_reset_confirm/'
 
-    def test_password_reset_request_success(self):
+    @patch('utils.send_password_reset_verification.send_email_custom')
+    def test_password_reset_request_success(self, mock_send_email):
+        mock_send_email.return_value = True
         data = {'email': 'mutheo2026@gmail.com'}
         response = self.client.post(self.reset_request_url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)   
+        mock_send_email.assert_called_once()
 
-    def test_password_reset_confirm(self):
+    def test_password_reset_confirm_success(self):
+        verification = VerificationCode.objects.create(
+            user=self.user,
+            label=VerificationCode.RESET_PASSWORD,
+            email=self.user.email
+        )
         data = {
             'email': 'mutheo2026@gmail.com',
-            'code': '123456',
+            'token': str(verification.token),
             'new_password': 'NewPass123!',
             'new_password_confirm': 'NewPass123!'
         }
         response = self.client.post(self.reset_confirm_url, data, format='json')
-        self.assertIn(response.status_code, [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST])
+        self.assertEqual(response.status_code, status.HTTP_200_OK)      
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('NewPass123!'))
+
 
 
 class EmailVerificationTestCase(TestCase):
@@ -126,15 +138,16 @@ class EmailVerificationTestCase(TestCase):
             password='testpass123'
         )
 
-    def test_send_verification_code(self):
-        code = VerificationCode.objects.create(
+    def test_send_verification_code(self):      
+        verification = VerificationCode.objects.create(
             user=self.user,
-            code='123456',
-            label=VerificationCode.EMAIL_VERIFICATION,
+            label=VerificationCode.REGISTER,
             email='mutheo2026@gmail.com'
         )
-        self.assertEqual(code.code, '123456')
-        self.assertTrue(code.is_pending)
+        self.assertEqual(verification.label, 'REGISTER')
+        self.assertFalse(verification.is_used)
+        self.assertFalse(verification.is_expired)
+        self.assertTrue(verification.is_valid)
 
 
 class ChangePasswordTestCase(TestCase):

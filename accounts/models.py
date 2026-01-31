@@ -130,70 +130,35 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.full_name if self.full_name else self.email
 
 
-class VerificationCode(models.Model):   
-    
+class VerificationCode(models.Model):
+
     REGISTER = 'REGISTER'
-    EMAIL_VERIFICATION = 'EMAIL_VERIFICATION'
     RESET_PASSWORD = 'RESET_PASSWORD'
-    CHANGE_EMAIL = 'CHANGE_EMAIL'
 
     LABEL_CHOICES = [
         (REGISTER, 'Register'),
-        (EMAIL_VERIFICATION, 'Email Verification'),
         (RESET_PASSWORD, 'Reset Password'),
-        (CHANGE_EMAIL, 'Change Email'),
     ]
 
-    # UUID Primary Key
-    id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False,
-        unique=True
-    )
-    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,  
-        blank=True,
-        null=True,
-        related_name='verification_codes'
+        on_delete=models.CASCADE,
+        related_name='verification_tokens'
     )
-    code = models.CharField(max_length=6)
-    label = models.CharField(
-        max_length=30,
-        choices=LABEL_CHOICES,
-        default=REGISTER
-    )
-    email = models.EmailField(max_length=255)  
-    email_verified = models.BooleanField(default=False)
+
+    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    label = models.CharField(max_length=30, choices=LABEL_CHOICES)
+    email = models.EmailField()
+    is_used = models.BooleanField(default=False)
     created_on = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        indexes = [
-            models.Index(fields=['email', 'code', 'label']),
-            models.Index(fields=['created_on']),
-        ]
-        ordering = ['-created_on']
-
-    def __str__(self):
-        return f"{self.email} - {self.label} - {self.code}"
+    @property
+    def is_expired(self):
+        expiry_minutes = getattr(settings, 'VERIFICATION_CODE_EXPIRY_MINUTES', 10)
+        return timezone.now() > self.created_on + timedelta(minutes=expiry_minutes)
 
     @property
     def is_valid(self):
-        """Check if verification code is still valid (not expired and not used)"""
-        expiration_minutes = getattr(settings, 'VERIFICATION_CODE_EXPIRY_MINUTES', 10)
-        expiration_time = self.created_on + timedelta(minutes=expiration_minutes)        
-        return timezone.now() < expiration_time and not self.email_verified
-    
-    @property
-    def is_pending(self):
-        """Check if verification code is pending (valid and not verified)"""
-        return not self.email_verified and self.is_valid
-    
-    @property
-    def is_expired(self):
-        """Check if verification code has expired"""
-        expiration_minutes = getattr(settings, 'VERIFICATION_CODE_EXPIRY_MINUTES', 10)
-        expiration_time = self.created_on + timedelta(minutes=expiration_minutes)
-        return timezone.now() >= expiration_time
+        return not self.is_used and not self.is_expired
