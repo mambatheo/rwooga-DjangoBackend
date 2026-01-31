@@ -1,3 +1,6 @@
+import uuid
+from datetime import timedelta
+
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
@@ -42,8 +45,8 @@ class UserManager(BaseUserManager):
         return self.create_user(email, full_name, phone_number, password, **extra_fields)
 
 
-class User(AbstractBaseUser, PermissionsMixin): 
-   
+class User(AbstractBaseUser, PermissionsMixin):     
+    
     STAFF = 'STAFF'
     ADMIN = 'ADMIN'
     CUSTOMER = 'CUSTOMER'
@@ -54,7 +57,13 @@ class User(AbstractBaseUser, PermissionsMixin):
         (CUSTOMER, 'Customer'),
     ]
     
-  
+    # UUID Primary Key
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        unique=True
+    )
     
     email = models.EmailField(
         _('email address'),
@@ -65,13 +74,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     
     phone_number = models.CharField(
-       
         max_length=10,  
         unique=True,
-       
     )
     
-    full_name = models.CharField(_('full name'), max_length=50, )
+    full_name = models.CharField(_('full name'), max_length=50)
     
     user_type = models.CharField(
         max_length=20,
@@ -123,7 +130,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.full_name if self.full_name else self.email
 
 
-class VerificationCode(models.Model):    
+class VerificationCode(models.Model):   
     
     REGISTER = 'REGISTER'
     EMAIL_VERIFICATION = 'EMAIL_VERIFICATION'
@@ -137,34 +144,56 @@ class VerificationCode(models.Model):
         (CHANGE_EMAIL, 'Change Email'),
     ]
 
+    # UUID Primary Key
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        unique=True
+    )
+    
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.SET_NULL, 
-        blank=True, 
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,  
+        blank=True,
         null=True,
         related_name='verification_codes'
     )
     code = models.CharField(max_length=6)
     label = models.CharField(
-        max_length=30, 
-        choices=LABEL_CHOICES, 
+        max_length=30,
+        choices=LABEL_CHOICES,
         default=REGISTER
     )
-    email = models.EmailField(max_length=255, blank=True, null=True)
-    is_pending = models.BooleanField(default=True)
+    email = models.EmailField(max_length=255)  
+    email_verified = models.BooleanField(default=False)
     created_on = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         indexes = [
-            models.Index(fields=['user', 'code', 'label']),
+            models.Index(fields=['email', 'code', 'label']),
+            models.Index(fields=['created_on']),
         ]
-        unique_together = ('code', 'user')
+        ordering = ['-created_on']
 
     def __str__(self):
-        email = self.user.email if self.user else (self.email or "No email") 
-        return f"{email} - {self.label} - {self.code}"
+        return f"{self.email} - {self.label} - {self.code}"
 
     @property
     def is_valid(self):
-        expiration_time = self.created_on + settings.VERIFICATION_CODE_LIFETIME
-        return timezone.now() < expiration_time and self.is_pending
+        """Check if verification code is still valid (not expired and not used)"""
+        expiration_minutes = getattr(settings, 'VERIFICATION_CODE_EXPIRY_MINUTES', 10)
+        expiration_time = self.created_on + timedelta(minutes=expiration_minutes)        
+        return timezone.now() < expiration_time and not self.email_verified
+    
+    @property
+    def is_pending(self):
+        """Check if verification code is pending (valid and not verified)"""
+        return not self.email_verified and self.is_valid
+    
+    @property
+    def is_expired(self):
+        """Check if verification code has expired"""
+        expiration_minutes = getattr(settings, 'VERIFICATION_CODE_EXPIRY_MINUTES', 10)
+        expiration_time = self.created_on + timedelta(minutes=expiration_minutes)
+        return timezone.now() >= expiration_time

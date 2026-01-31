@@ -13,30 +13,31 @@ class UserRegistrationTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.register_url = '/auth/register/'
-        self.valid_data = {
+        self.user_data = {
             'full_name': 'John Doe',
-            'email': 'john@example.com',
+            'email': 'mutheo2026@gmail.com',
             'phone_number': '0781234567',
             'password': 'SecurePass123!',
             'password_confirm': 'SecurePass123!'
         }
 
     def test_registration_success(self):
-        response = self.client.post(self.register_url, self.valid_data, format='json')
+        response = self.client.post(self.register_url, self.user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn('user', response.data)
-        self.assertIn('access', response.data)
-        self.assertIn('refresh', response.data)
+        self.assertIn('message', response.data)
+        self.assertIn('email', response.data)
+        self.assertEqual(response.data['email'], self.user_data['email'])  
+        self.assertTrue(User.objects.filter(email=self.user_data['email']).exists())
 
     def test_registration_password_mismatch(self):
-        data = self.valid_data.copy()
+        data = self.user_data.copy()
         data['password_confirm'] = 'DifferentPass123!'
         response = self.client.post(self.register_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_registration_duplicate_email(self):
-        self.client.post(self.register_url, self.valid_data, format='json')
-        response = self.client.post(self.register_url, self.valid_data, format='json')
+        self.client.post(self.register_url, self.user_data, format='json')
+        response = self.client.post(self.register_url, self.user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
@@ -46,21 +47,21 @@ class UserLoginTestCase(TestCase):
         self.client = APIClient()
         self.login_url = '/auth/login/'
         self.user = User.objects.create_user(
-            email='test@example.com',
+            email='mutheo2026@gmail.com',
             full_name='Test User',
             phone_number='0780000000',
             password='testpass123'
         )
 
     def test_login_success(self):
-        data = {'email': 'test@example.com', 'password': 'testpass123'}
+        data = {'email': 'mutheo2026@gmail.com', 'password': 'testpass123'}
         response = self.client.post(self.login_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('access', response.data)
         self.assertIn('refresh', response.data)
 
     def test_login_invalid_credentials(self):
-        data = {'email': 'test@example.com', 'password': 'wrongpassword'}
+        data = {'email': 'mutheo2026@gmail.com', 'password': 'wrongpassword'}
         response = self.client.post(self.login_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -71,7 +72,7 @@ class UserLogoutTestCase(TestCase):
         self.client = APIClient()
         self.logout_url = '/auth/logout/'
         self.user = User.objects.create_user(
-            email='test@example.com',
+            email='mutheo2026@gmail.com',
             full_name='Test User',
             phone_number='0780000000',
             password='testpass123'
@@ -90,7 +91,7 @@ class PasswordResetTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_user(
-            email='test@example.com',
+            email='mutheo2026@gmail.com',
             full_name='Test User',
             phone_number='0780000000',
             password='testpass123'
@@ -99,13 +100,13 @@ class PasswordResetTestCase(TestCase):
         self.reset_confirm_url = '/auth/password_reset_confirm/'
 
     def test_password_reset_request_success(self):
-        data = {'email': 'test@example.com'}
+        data = {'email': 'mutheo2026@gmail.com'}
         response = self.client.post(self.reset_request_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_password_reset_confirm(self):
         data = {
-            'email': 'test@example.com',
+            'email': 'mutheo2026@gmail.com',
             'code': '123456',
             'new_password': 'NewPass123!',
             'new_password_confirm': 'NewPass123!'
@@ -119,7 +120,7 @@ class EmailVerificationTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_user(
-            email='test@example.com',
+            email='mutheo2026@gmail.com',
             full_name='Test User',
             phone_number='0780000000',
             password='testpass123'
@@ -130,7 +131,7 @@ class EmailVerificationTestCase(TestCase):
             user=self.user,
             code='123456',
             label=VerificationCode.EMAIL_VERIFICATION,
-            email='test@example.com'
+            email='mutheo2026@gmail.com'
         )
         self.assertEqual(code.code, '123456')
         self.assertTrue(code.is_pending)
@@ -141,7 +142,7 @@ class ChangePasswordTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_user(
-            email='test@example.com',
+            email='mutheo2026@gmail.com',
             full_name='Test User',
             phone_number='0780000000',
             password='testpass123'
@@ -176,7 +177,7 @@ class DeleteAccountTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_user(
-            email='test@example.com',
+            email='mutheo2026@gmail.com',
             full_name='Test User',
             phone_number='0780000000',
             password='testpass123'
@@ -194,7 +195,7 @@ class DeactivateAccountTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.admin_user = User.objects.create_user(
-            email='admin@example.com',
+            email='feedyopc@gmail.com',
             full_name='Admin User',
             phone_number='0780000001',
             password='adminpass123',
@@ -202,7 +203,7 @@ class DeactivateAccountTestCase(TestCase):
             is_staff=True
         )
         self.regular_user = User.objects.create_user(
-            email='user@example.com',
+            email='mutheo2026@gmail.com',
             full_name='Regular User',
             phone_number='0780000000',
             password='testpass123'
@@ -222,7 +223,7 @@ class ActivateAccountTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.admin_user = User.objects.create_user(
-            email='admin@example.com',
+            email='feedyopc@gmail.com',
             full_name='Admin User',
             phone_number='0780000001',
             password='adminpass123',
@@ -230,7 +231,7 @@ class ActivateAccountTestCase(TestCase):
             is_staff=True
         )
         self.regular_user = User.objects.create_user(
-            email='user@example.com',
+            email='mutheo2026@gmail.com',
             full_name='Regular User',
             phone_number='0780000000',
             password='testpass123',
@@ -251,7 +252,7 @@ class UpdateProfileTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_user(
-            email='test@example.com',
+            email='mutheo2026@gmail.com',
             full_name='Test User',
             phone_number='0780000000',
             password='testpass123'
