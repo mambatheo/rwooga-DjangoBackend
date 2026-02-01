@@ -19,11 +19,8 @@ from accounts.serializers import (
 )
 from accounts.permissions import IsAdmin, IsOwnerOrAdmin
 from accounts.models import VerificationCode
-from utils import (
-    send_registration_verification,
-    send_password_reset_verification,
-   
-)
+from utils.registration_verification import send_registration_verification
+from utils.send_password_reset_verification import send_password_reset_verification
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -197,6 +194,67 @@ class AuthViewSet(viewsets.GenericViewSet):
         token = RefreshToken(refresh_token)
         token.blacklist()
         return Response({"message": "Successfully logged out"})
+
+    @action(detail=False, methods=["post"], permission_classes=[AllowAny])
+    def refresh_token(self, request):
+        """Refresh access token using refresh token"""
+        try:
+            refresh_token_str = request.data.get("refresh")
+            if not refresh_token_str:
+                return Response(
+                    {"error": "Refresh token is required"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Validate and refresh the token
+            token = RefreshToken(refresh_token_str)
+            
+            # Get new access token
+            new_access_token = str(token.access_token)
+            
+            # Response data
+            response_data = {
+                "access": new_access_token,
+            }
+            
+            # If ROTATE_REFRESH_TOKENS is True, generate new refresh token
+            from django.conf import settings
+            simple_jwt_settings = getattr(settings, 'SIMPLE_JWT', {})
+            if simple_jwt_settings.get('ROTATE_REFRESH_TOKENS', False):
+                # Blacklist old token
+                try:
+                    token.blacklist()
+                except Exception:
+                    pass  # Token might not be blacklistable
+                
+                # Get user from token payload
+                user_id = token.payload.get('user_id')
+                user = User.objects.get(id=user_id)
+                
+                # Generate new refresh token
+                new_refresh_token = RefreshToken.for_user(user)
+                response_data["refresh"] = str(new_refresh_token)
+            
+            logger.info(f"Token refreshed successfully for user {token.payload.get('user_id')}")
+            return Response(response_data, status=status.HTTP_200_OK)
+            
+        except TokenError as e:
+            logger.error(f"Token refresh failed: {str(e)}")
+            return Response(
+                {"error": "Invalid or expired refresh token"},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            logger.error(f"Token refresh error: {str(e)}")
+            return Response(
+                {"error": "Token refresh failed"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     @action(detail=False, methods=["post"])
     def password_reset_request(self, request):

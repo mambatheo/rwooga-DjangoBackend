@@ -1,11 +1,12 @@
-import datetime
+from django.utils import timezone
+from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from accounts.models import User, VerificationCode
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-
+User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):    
     class Meta:
         model = User
@@ -154,7 +155,7 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 class PasswordResetConfirmSerializer(serializers.Serializer):  
     
     email = serializers.EmailField(required=True)
-    token = serializers.UUIDField(required=True)  # changed from code to token
+    token = serializers.UUIDField(required=True) 
     new_password = serializers.CharField(
         required=True,
         write_only=True,
@@ -219,7 +220,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         """Add custom claims to token"""
         # Update last login
-        User.objects.filter(id=user.id).update(last_login=datetime.datetime.now())        
+        User.objects.filter(id=user.id).update(last_login=timezone.now())      
         token = super().get_token(user)        
         
         # Add custom claims

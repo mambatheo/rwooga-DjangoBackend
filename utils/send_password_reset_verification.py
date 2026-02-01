@@ -3,6 +3,7 @@ from utils.send_email import send_email_custom
 
 
 def send_password_reset_verification(user):
+   
     from accounts.models import VerificationCode
 
     verification = VerificationCode.objects.create(
@@ -18,7 +19,7 @@ def send_password_reset_verification(user):
 
     context = {
         "full_name": user.full_name,
-        "verification_link": reset_url,
+        "reset_password_link": reset_url, 
         "company_name": settings.COMPANY_NAME,
         "support_email": settings.SUPPORT_EMAIL,
         "expiry_minutes": settings.VERIFICATION_CODE_EXPIRY_MINUTES,
