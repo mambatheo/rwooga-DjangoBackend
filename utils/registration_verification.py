@@ -12,7 +12,7 @@ def send_registration_verification(user):
     )
 
     verify_url = (
-        f"{settings.FRONTEND_URL}"
+        f"{settings.SITE_URL}"
         f"/verify-email?token={verification.token}"
     )
 
