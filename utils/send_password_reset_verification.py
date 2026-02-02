@@ -13,7 +13,7 @@ def send_password_reset_verification(user):
     )
 
     reset_url = (
-        f"{settings.FRONTEND_URL}"
+        f"{settings.SITE_URL}"
         f"/reset-password?token={verification.token}"
     )
 
