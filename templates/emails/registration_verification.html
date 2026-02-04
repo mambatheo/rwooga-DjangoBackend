@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Email</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9fafb; padding: 20px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(26, 58, 46, 0.15);">
+        
+        <!-- Logo Section -->
+        <tr>
+            <td style="background: linear-gradient(135deg, #1a3a2e 0%, #2d5f4d 100%); padding: 30px; text-align: center; border-bottom: 4px solid #00d4ff;">
+                <img src="{{ company_logo_url }}" alt="{{ company_name }} Logo" style="max-width: 200px; height: auto; display: block; margin: 0 auto;">
+            </td>
+        </tr>
+        
+        <!-- Header -->
+        <tr>
+            <td style="background: linear-gradient(135deg, #1a3a2e 0%, #2d5f4d 100%); padding: 50px 30px; text-align: center;">
+                <h1 style="margin: 0; font-family: 'Poppins', sans-serif; font-size: 32px; font-weight: 700; color: #ffffff; margin-bottom: 10px; letter-spacing: -0.5px;"> Welcome!</h1>
+                <p style="margin: 0; font-size: 16px; color: rgba(255, 255, 255, 0.9); font-weight: 400;">You're just one step away from getting started</p>
+            </td>
+        </tr>
+        
+        <!-- Body -->
+        <tr>
+            <td style="padding: 45px 35px; background-color: #ffffff;">
+                
+                <!-- Greeting -->
+                <p style="margin: 0 0 20px 0; font-family: 'Poppins', sans-serif; font-size: 20px; font-weight: 600; color: #1a3a2e;">
+                    Hello <span style="color: #00d4ff;">{{ full_name }}</span>,
+                </p>
+                
+                <!-- Message -->
+                <p style="margin: 0 0 35px 0; font-size: 15px; color: #64748b; line-height: 1.8;">
+                    Thank you for registering with us! We're excited to have you on board. To complete your registration and activate your account, please verify your email address by clicking the button below.
+                </p>
+                
+                <!-- Button Container -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="margin: 40px 0;">
+                    <tr>
+                        <td align="center">
+                            <a href="{{ verification_link }}" style="display: inline-block; background: linear-gradient(135deg, #00d4ff 0%, #00a3cc 100%); color: #ffffff; font-family: 'Poppins', sans-serif; font-weight: 600; padding: 18px 55px; text-decoration: none; border-radius: 10px; font-size: 17px; box-shadow: 0 6px 25px rgba(0, 212, 255, 0.4); letter-spacing: 0.3px;">Verify Email Address</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="center" style="padding-top: 18px;">
+                            <p style="margin: 0; font-size: 13px; color: #94a3b8; font-weight: 500;"> This link expires in {{ expiry_minutes }} minutes</p>
+                        </td>
+                    </tr>
+                </table>
+                
+                <!-- Info Box -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); border-left: 4px solid #00d4ff; padding: 20px 25px; border-radius: 8px;">
+                            <p style="margin: 0; color: #1a3a2e; font-size: 14px; line-height: 1.7;">
+                                <strong style="color: #00a3cc; font-weight: 600;">ℹ️ One-click verification:</strong> Simply click the button above to instantly activate your account. No code needed!
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+                
+                <!-- Alternative Link -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #f0f9f7 0%, #d1f2eb 100%); border: 2px solid #a7f3d0; padding: 20px; border-radius: 10px;">
+                            <p style="margin: 0 0 10px 0; font-size: 13px; color: #2d5f4d; font-weight: 600;"><strong>Button not working?</strong> Copy and paste this link into your browser:</p>
+                            <a href="{{ verification_link }}" style="font-size: 12px; color: #00a3cc; text-decoration: none; font-family: 'Courier New', monospace; word-break: break-all;">{{ verification_link }}</a>
+                        </td>
+                    </tr>
+                </table>
+                
+                <!-- Warning Box -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-left: 4px solid #ff9500; padding: 20px 25px; border-radius: 8px;">
+                            <p style="margin: 0 0 8px 0; color: #92400e; font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 600;"> Security Notice</p>
+                            <p style="margin: 0; color: #b45309; font-size: 14px; line-height: 1.7;">
+                                If you didn't create an account with us, please ignore this email. The verification link will expire automatically and your email will not be registered.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+                
+                <!-- Divider -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="margin: 35px 0;">
+                    <tr>
+                        <td style="height: 2px; background: linear-gradient(to right, transparent, #c2e0d7, transparent);"></td>
+                    </tr>
+                </table>
+                
+                <!-- Features List -->
+                <p style="margin: 0 0 15px 0; font-size: 15px; color: #64748b; line-height: 1.8;">
+                    Once you verify your email, you'll be able to:
+                </p>
+                <ul style="margin: 0 0 25px 25px; padding: 0; color: #64748b; font-size: 15px; line-height: 1.8;">
+                    <li style="margin: 10px 0;">Access your account securely</li>
+                    <li style="margin: 10px 0;">Enjoy all our features and services</li>
+                    <li style="margin: 10px 0;">Receive important updates and notifications</li>
+                </ul>
+                
+                <p style="margin: 0 0 25px 0; font-size: 15px; color: #64748b; line-height: 1.8;">
+                    If you have any questions or need assistance, feel free to reach out to our support team at <strong style="color: #1a3a2e; font-weight: 600;">{{ support_email }}</strong>. We're here to help!
+                </p>
+                
+                <!-- Signature -->
+                <p style="margin: 35px 0 0 0; font-size: 15px; color: #2d5f4d; font-weight: 500; line-height: 1.6;">
+                    Best regards,<br>
+                    <strong style="color: #00d4ff; font-family: 'Poppins', sans-serif; font-weight: 600;"> {{ company_name }} Team</strong>
+                </p>
+            </td>
+        </tr>
+        
+        <!-- Footer -->
+        <tr>
+            <td style="background: linear-gradient(135deg, #1a3a2e 0%, #2d5f4d 100%); padding: 35px; text-align: center; border-top: 4px solid #00d4ff;">
+                <p style="margin: 0 0 8px 0; font-size: 13px; color: #c2e0d7;">This is an automated message, please do not reply to this email.</p>
+                
+                <!-- Social Links -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="margin: 25px 0;">
+                    <tr>
+                        <td align="center">
+                            <a href="{{ social_instagram }}" style="display: inline-block; margin: 0 12px;">
+                                <img src="{{ instagram_icon_url }}" alt="Instagram" style="width: 26px; height: 26px; opacity: 0.85;">
+                            </a>
+                            <a href="{{ social_twitter }}" style="display: inline-block; margin: 0 12px;">
+                                <img src="{{ twitter_icon_url }}" alt="Twitter" style="width: 26px; height: 26px; opacity: 0.85;">
+                            </a>
+                            <a href="{{ social_facebook }}" style="display: inline-block; margin: 0 12px;">
+                                <img src="{{ facebook_icon_url }}" alt="Facebook" style="width: 26px; height: 26px; opacity: 0.85;">
+                            </a>
+                        </td>
+                    </tr>
+                </table>
+                
+                <p style="margin: 20px 0 0 0; font-size: 12px; color: rgba(167, 243, 208, 0.6);">© 2026 {{ company_name }}. All rights reserved.</p>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
