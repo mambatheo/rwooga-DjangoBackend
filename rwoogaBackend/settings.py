@@ -151,6 +151,12 @@ INSTAGRAM_ICON_URL = config('INSTAGRAM_ICON_URL', default='')
 TWITTER_ICON_URL = config('TWITTER_ICON_URL', default='')
 TIKTOK_ICON_URL = config('TIKTOK_ICON_URL', default='')
 
+STORAGES = {   
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -160,10 +166,19 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "https://rwooga-project.vercel.app",
     "https://www.rwooga.com",
+    "https://rwooga-project.vercel.app/",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
-# Email Configuration
+
+
+SITE_URL =  "https://rwooga-project.vercel.app/"   
+COMPANY_NAME = "Rwooga"                 
+SUPPORT_EMAIL = "support@rwooga.com"
+VERIFICATION_CODE_EXPIRY_MINUTES = 10 
+
+
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
