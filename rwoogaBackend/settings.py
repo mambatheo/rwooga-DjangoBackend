@@ -22,7 +22,7 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['https://awful-carlina-solvitafrica-ac088785.koyeb.app','https://rwooga-project.vercel.app']
 
 # Application definition
 
