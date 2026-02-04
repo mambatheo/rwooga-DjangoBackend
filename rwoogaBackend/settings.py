@@ -22,7 +22,7 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -145,7 +145,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://rwooga-project.vercel.app/",
+    "https://rwooga-project.vercel.app",
     "https://www.rwooga.com",
 ]
 CORS_ALLOW_CREDENTIALS = True
