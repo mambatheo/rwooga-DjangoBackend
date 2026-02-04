@@ -51,6 +51,7 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = 'accounts.User'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -86,11 +87,11 @@ WSGI_APPLICATION = 'rwoogaBackend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('NAME'),
-        'USER': config('USER'),
-        'PASSWORD': config('PASSWORD'),
-        'HOST': config('HOST', default='localhost'),
-        'PORT': config('PORT', cast=int, default=5432),
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT': config('DB_PORT', cast=int, default=5432),
     }
 }
 
@@ -128,18 +129,30 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+MEDIA_URL = '/media/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Email context variables
+COMPANY_LOGO_URL = config('COMPANY_LOGO_URL', default='')
+YOUTUBE = config('YOUTUBE', default='https://youtube.com/' )
+INSTAGRAM = config('INSTAGRAM', default='https://www.instagram.com/rwooga.ent?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw%3D%3D')
+TWITTER = config('TWITTER', default='https://x.com/PhedoKat')
+TIKTOK = config('TIKTOK', default='https://www.tiktok.com/@phedish?_r=1&_t=ZS-93aOKvDhzme')
+
+# Icon URLs (hosted externally or our domain)
+YOUTUBE_ICON_URL = config('YOUTUBE_ICON_URL', default='')
+INSTAGRAM_ICON_URL = config('INSTAGRAM_ICON_URL', default='')
+TWITTER_ICON_URL = config('TWITTER_ICON_URL', default='')
+TIKTOK_ICON_URL = config('TIKTOK_ICON_URL', default='')
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
 
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = [
@@ -147,19 +160,10 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "https://rwooga-project.vercel.app",
     "https://www.rwooga.com",
-    
 ]
 CORS_ALLOW_CREDENTIALS = True
 
-
-
-SITE_URL =  "https://rwooga-project.vercel.app"   
-COMPANY_NAME = "Rwooga"                 
-SUPPORT_EMAIL = "support@rwooga.com"
-VERIFICATION_CODE_EXPIRY_MINUTES = 10 
-
-
-
+# Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
