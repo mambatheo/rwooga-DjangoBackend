@@ -14,12 +14,12 @@ load_dotenv()
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY')
-DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG =False
 
 
 # DEBUG = True 
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 INSTALLED_APPS = [
@@ -151,11 +151,11 @@ INSTAGRAM_ICON_URL = config('INSTAGRAM_ICON_URL', default='')
 TWITTER_ICON_URL = config('TWITTER_ICON_URL', default='')
 TIKTOK_ICON_URL = config('TIKTOK_ICON_URL', default='')
 
-STORAGES = {   
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
+# STORAGES = {   
+#     "staticfiles": {
+#         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+#     },
+# }
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
