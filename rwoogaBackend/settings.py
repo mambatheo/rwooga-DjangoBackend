@@ -17,7 +17,7 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    "awful-carlina-solvitafrica-ac088785.koyeb.app",
+    'delicious-elk-rwooga-9385c071.koyeb.app'
     "rwooga-project.vercel.app",
     "www.rwooga.com",
 ]
