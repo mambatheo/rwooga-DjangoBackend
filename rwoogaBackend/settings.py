@@ -94,11 +94,11 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('DB_NAME', default='postgres'),
-            'USER': config('DB_USER', default='postgres'),
-            'PASSWORD': config('DB_PASSWORD'),
-            'HOST': config('DB_HOST', default='localhost'),
-            'PORT': config('DB_PORT', cast=int, default=5432),
+            'NAME': config('NAME', default='postgres'),
+            'USER': config('USER', default='postgres'),
+            'PASSWORD': config('PASSWORD'),
+            'HOST': config('HOST', default='localhost'),
+            'PORT': config('PORT', cast=int, default=5432),
             'OPTIONS': {
                 'sslmode': 'require',  
             },
