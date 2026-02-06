@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import ServiceCategory, Product, ProductMedia, Feedback
 
+
 class ProductMediaInline(admin.TabularInline):
     model = ProductMedia
     extra = 1
@@ -10,33 +11,37 @@ class FeedbackInline(admin.TabularInline):
     extra = 0
     readonly_fields = ['client_name', 'rating', 'message', 'created_at']
 
+
 @admin.register(ServiceCategory)
 class ServiceCategoryAdmin(admin.ModelAdmin):
-    list_display = ['name', 'is_active', 'display_order', 'created_at']
+    list_display = ['name', 'slug', 'is_active', 'display_order', 'created_at']
     list_filter = ['is_active']
     search_fields = ['name']
     ordering = ['display_order']
+    prepopulated_fields = {'slug': ('name',)}
+
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = ['name', 'category', 'unit_price', 'published', 'created_at']
     list_filter = ['published', 'category', 'created_at']
     search_fields = ['name', 'short_description']
-    readonly_fields = ['product_volume', 'created_at', 'updated_at']
+    readonly_fields = ['created_at', 'updated_at']
     inlines = [ProductMediaInline, FeedbackInline]
+    prepopulated_fields = {'slug': ('name',)}
     
     fieldsets = (
         ('Basic Info', {
-            'fields': ('name', 'category', 'short_description', 'detailed_description')
+            'fields': ('name', 'slug', 'category', 'short_description', 'detailed_description')
         }),
         ('Pricing', {
             'fields': ('unit_price', 'currency')
         }),
         ('Dimensions', {
-            'fields': ('length', 'width', 'height', 'product_volume', 'measurement_unit', 'material')
+            'fields': ('length', 'width', 'height', 'measurement_unit', 'material')
         }),
         ('Product Variations', {
-            'fields': ('available_sizes', 'available_colors', 'available_materials'),
+            'fields': ('available_sizes', 'available_colors'),
             'description': 'Enter comma-separated values (e.g., Small, Medium, Large)'
         }),
         ('Publishing', {
@@ -47,11 +52,13 @@ class ProductAdmin(admin.ModelAdmin):
         }),
     )
 
+
 @admin.register(ProductMedia)
 class ProductMediaAdmin(admin.ModelAdmin):
     list_display = ['product', 'display_order', 'uploaded_at']
     list_filter = ['uploaded_at']
     search_fields = ['product__name', 'alt_text']
+
 
 @admin.register(Feedback)
 class FeedbackAdmin(admin.ModelAdmin):

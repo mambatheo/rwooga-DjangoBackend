@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Avg
 from .models import ServiceCategory, Product, ProductMedia, Feedback
+from .permissions import IsAdminOrStaffOrReadOnly, IsStaffOnly, CustomerCanCreateFeedback
 from .serializers import (
     ServiceCategorySerializer,
     ProductSerializer,
@@ -16,7 +17,7 @@ from .serializers import (
 class ServiceCategoryViewSet(viewsets.ModelViewSet):
     queryset = ServiceCategory.objects.all()
     serializer_class = ServiceCategorySerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdminOrStaffOrReadOnly]
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -24,7 +25,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         average_rating=Avg("feedbacks__rating")
     )
     serializer_class = ProductSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdminOrStaffOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'short_description', 'detailed_description']
     ordering_fields = ['unit_price', 'created_at', 'name']
@@ -53,14 +54,14 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         return qs
 
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=["post"], permission_classes=[IsStaffOnly])
     def publish(self, request, pk=None):
         product = self.get_object()
         product.published = True
         product.save()
         return Response({"status": "Product published"})
 
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=["post"], permission_classes=[IsStaffOnly])
     def unpublish(self, request, pk=None):
         product = self.get_object()
         product.published = False
@@ -73,7 +74,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 class ProductMediaViewSet(viewsets.ModelViewSet):
     queryset = ProductMedia.objects.all()
     serializer_class = ProductMediaSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdminOrStaffOrReadOnly]
     
     def get_queryset(self):
         qs = super().get_queryset()
@@ -86,7 +87,7 @@ class ProductMediaViewSet(viewsets.ModelViewSet):
 class FeedbackViewSet(viewsets.ModelViewSet):
     queryset = Feedback.objects.all()
     serializer_class = FeedbackSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [CustomerCanCreateFeedback]
     
     def get_queryset(self):
         qs = super().get_queryset()
@@ -100,3 +101,16 @@ class FeedbackViewSet(viewsets.ModelViewSet):
         if product_id:
             qs = qs.filter(product_id=product_id)
         return qs
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsStaffOnly])
+    def moderate(self, request, pk=None):
+        """Toggle feedback published status (staff only)"""
+        feedback = self.get_object()
+        feedback.published = not feedback.published
+        feedback.save()
+        return Response({
+            "published": feedback.published,
+            "message": f"Feedback {'published' if feedback.published else 'unpublished'}"
+        })
+    
+

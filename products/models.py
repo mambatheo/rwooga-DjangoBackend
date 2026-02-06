@@ -45,6 +45,7 @@ class Product(models.Model):
 
     product_volume = models.DecimalField(max_digits=10, decimal_places=2, editable=False)
     measurement_unit = models.CharField(max_length=10, default="cm")
+    
 
     published = models.BooleanField(default=False)
     uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
@@ -57,9 +58,9 @@ class Product(models.Model):
     available_materials = models.CharField(max_length=200, blank=True, help_text="e.g., PLA, ABS, Resin")
     
 
-    def save(self, *args, **kwargs):
-        self.product_volume = self.length * self.width * self.height
-        super().save(*args, **kwargs)
+    @property
+    def product_volume(self):
+        return self.length * self.width * self.height
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -116,3 +117,5 @@ class Feedback(models.Model):
     rating = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     published = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="feedbacks")
+
