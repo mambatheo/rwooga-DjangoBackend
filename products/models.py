@@ -8,9 +8,9 @@ from django.utils.text import slugify
 class ServiceCategory(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, unique=True)
-    slug = models.SlugField(max_length=100, unique=True)
-    description = models.TextField(blank=True)
-    #icon = models.CharField(max_length=100, blank=True)
+    slug = models.SlugField(max_length=100)
+    description = models.TextField( unique=True)
+    
     is_active = models.BooleanField(default=True)
     display_order = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -31,8 +31,8 @@ class ServiceCategory(models.Model):
 class Product(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     category = models.ForeignKey(ServiceCategory, on_delete=models.PROTECT, related_name="products")
-    name = models.CharField(max_length=200)
-    slug = models.SlugField(max_length=200, unique=True)
+    name = models.CharField(max_length=200, unique=True)
+    slug = models.SlugField(max_length=200)
     short_description = models.CharField(max_length=255)
     detailed_description = models.TextField()
     unit_price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
@@ -118,4 +118,3 @@ class Feedback(models.Model):
     published = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="feedbacks")
-
