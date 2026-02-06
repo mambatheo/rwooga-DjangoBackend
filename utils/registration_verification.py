@@ -19,6 +19,11 @@ def send_registration_verification(user):
         "full_name": user.full_name,
         "verification_link": verify_url,
         "company_name": settings.COMPANY_NAME,
+        "company_logo_url": settings.COMPANY_LOGO_URL,
+        "youtube_icon_url": settings.YOUTUBE_icon_URL,
+        "instagram_icon_url": settings.INSTAGRAM_ICON_URL,
+        "twitter_icon_url": settings.TWITTER_ICON_URL,
+        "tiktok_icon_url": settings.TIKTOK_ICON_URL,
         "support_email": settings.SUPPORT_EMAIL,
         "expiry_minutes": settings.VERIFICATION_CODE_EXPIRY_MINUTES,
     }
