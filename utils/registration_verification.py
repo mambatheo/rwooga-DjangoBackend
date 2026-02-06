@@ -24,6 +24,10 @@ def send_registration_verification(user):
         "instagram_icon_url": settings.INSTAGRAM_ICON_URL,
         "twitter_icon_url": settings.TWITTER_ICON_URL,
         "tiktok_icon_url": settings.TIKTOK_ICON_URL,
+        "youtube_url": settings.YOUTUBE,
+        "instagram_url": settings.INSTAGRAM,
+        "twitter_url": settings.TWITTER,
+        "tiktok_url": settings.TIKTOK,
         "support_email": settings.SUPPORT_EMAIL,
         "expiry_minutes": settings.VERIFICATION_CODE_EXPIRY_MINUTES,
     }
