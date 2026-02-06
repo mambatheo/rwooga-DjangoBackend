@@ -32,7 +32,7 @@ class Product(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     category = models.ForeignKey(ServiceCategory, on_delete=models.PROTECT, related_name="products")
     name = models.CharField(max_length=200, unique=True)
-    slug = models.SlugField(max_length=200)
+    slug = models.SlugField(max_length=200, blank=True, null=True)
     short_description = models.CharField(max_length=255)
     detailed_description = models.TextField()
     unit_price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
