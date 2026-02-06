@@ -22,7 +22,7 @@ RUN python manage.py collectstatic --noinput || echo "Collectstatic skipped"
 
 #bind to Koyeb's injected PORT
 CMD ["sh", "-c", "gunicorn rwoogaBackend.wsgi:application \
-  --bind 0.0.0.0:$PORT \
+  --bind 0.0.0.0:${PORT:-8000} \
   --workers 1 \
   --threads 2 \
   --timeout 300 \
