@@ -171,10 +171,10 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
 
 # Social Media
-YOUTUBE = config('YOUTUBE', default='https://youtube.com/')
-INSTAGRAM = config('INSTAGRAM', default='https://www.instagram.com/rwooga.ent')
-TWITTER = config('TWITTER', default='https://x.com/PhedoKat')
-TIKTOK = config('TIKTOK', default='https://www.tiktok.com/@phedish')
+YOUTUBE = config('YOUTUBE', default='https://www.youtube.com')
+INSTAGRAM = config('INSTAGRAM', default='https://www.instagram.com')
+TWITTER = config('TWITTER', default='https://www.x.com')
+TIKTOK = config('TIKTOK', default='https://www.tiktok.com')
 
 # Logo and Icons
 COMPANY_LOGO_URL = config('COMPANY_LOGO_URL', default='')
