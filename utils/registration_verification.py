@@ -1,19 +1,14 @@
 from django.conf import settings
+from django.core.signing import TimestampSigner
 from utils.send_email import send_email_custom
 
-def send_registration_verification(user):
-    from accounts.models import VerificationCode
 
-    verification = VerificationCode.objects.create(
-        user=user,
-        email=user.email,
-        label=VerificationCode.REGISTER
-    )
+def send_registration_verification(user):   
+    # Create signed token containing user ID
+    signer = TimestampSigner(salt='email-verification')
+    token = signer.sign(str(user.id))
    
-    verify_url = (
-        f"{settings.SITE_URL}"
-        f"/verify-email?token={verification.token}&email={user.email}"
-    )
+    verify_url = f"{settings.SITE_URL}/verify-email?token={token}"
 
     context = {
         "full_name": user.full_name,
@@ -29,7 +24,7 @@ def send_registration_verification(user):
         "twitter_url": settings.TWITTER,
         "tiktok_url": settings.TIKTOK,
         "support_email": settings.SUPPORT_EMAIL,
-        "expiry_minutes": settings.VERIFICATION_CODE_EXPIRY_MINUTES,
+        "expiry_minutes": getattr(settings, 'EMAIL_VERIFICATION_EXPIRY_MINUTES', 30), 
     }
 
     send_email_custom(
@@ -39,4 +34,4 @@ def send_registration_verification(user):
         context=context,
     )
 
-    return verification
+    return token

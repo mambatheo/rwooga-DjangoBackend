@@ -157,7 +157,9 @@ CSRF_TRUSTED_ORIGINS = [
 SITE_URL = config('SITE_URL', default='http://localhost:3000')
 COMPANY_NAME = config('COMPANY_NAME', default='Rwooga')
 SUPPORT_EMAIL = config('SUPPORT_EMAIL', default='support@rwooga.com')
-VERIFICATION_CODE_EXPIRY_MINUTES = config('VERIFICATION_CODE_EXPIRY_MINUTES', default=10, cast=int)
+EMAIL_VERIFICATION_EXPIRY_MINUTES = config('EMAIL_VERIFICATION_EXPIRY_MINUTES', default=30, cast=int)  
+PASSWORD_RESET_EXPIRY_MINUTES = config('PASSWORD_RESET_EXPIRY_MINUTES', default=30, cast=int)  
+
 
 # Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

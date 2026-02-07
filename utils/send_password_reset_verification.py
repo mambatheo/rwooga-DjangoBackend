@@ -1,21 +1,14 @@
 from django.conf import settings
+from django.core.signing import TimestampSigner
 from utils.send_email import send_email_custom
 
 
-def send_password_reset_verification(user):
-    from accounts.models import VerificationCode
-
-    verification = VerificationCode.objects.create(
-        user=user,
-        email=user.email,
-        label=VerificationCode.RESET_PASSWORD
-    )
-
-   
-    reset_url = (
-        f"{settings.SITE_URL}"
-        f"/reset-password?token={verification.token}&email={user.email}"
-    )
+def send_password_reset_verification(user):    
+    # Create signed token containing user ID
+    signer = TimestampSigner(salt='password-reset')
+    token = signer.sign(str(user.id))    
+    # Build password reset URL with signed token
+    reset_url = f"{settings.SITE_URL}/reset-password?token={token}"
 
     context = {
         "full_name": user.full_name,
@@ -27,9 +20,7 @@ def send_password_reset_verification(user):
         "twitter_icon_url": settings.TWITTER_ICON_URL,
         "tiktok_icon_url": settings.TIKTOK_ICON_URL,
         "support_email": settings.SUPPORT_EMAIL,
-        "expiry_minutes": settings.VERIFICATION_CODE_EXPIRY_MINUTES,
-        
-       
+        "expiry_minutes": getattr(settings, 'PASSWORD_RESET_EXPIRY_MINUTES', 30),  
     }
 
     send_email_custom(
@@ -39,4 +30,4 @@ def send_password_reset_verification(user):
         context=context,
     )
 
-    return verification
+    return token

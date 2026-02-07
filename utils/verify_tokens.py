@@ -1,0 +1,45 @@
+
+from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
+from django.conf import settings
+
+
+def verify_email_token(token):   
+    max_age = getattr(settings, 'EMAIL_VERIFICATION_EXPIRY_MINUTES', 30) 
+    signer = TimestampSigner(salt='email-verification')
+    
+    try:
+        user_id = signer.unsign(token, max_age=max_age)
+        return True, user_id, None
+    except SignatureExpired:
+        return False, None, "Verification link has expired"
+    except BadSignature:
+        return False, None, "Invalid verification link"
+
+
+def verify_password_reset_token(token):
+    """
+    Verify a password reset token
+    
+    Args:
+        token: The signed token from the password reset URL
+        
+    Returns:
+        tuple: (success: bool, user_id: str or None, error: str or None)
+        
+    Example:
+        success, user_id, error = verify_password_reset_token(token)
+        if success:
+            user = User.objects.get(id=user_id)
+            user.set_password(new_password)
+            user.save()
+    """
+    max_age = getattr(settings, 'PASSWORD_RESET_EXPIRY_MINUTES', 30)
+    signer = TimestampSigner(salt='password-reset')
+    
+    try:
+        user_id = signer.unsign(token, max_age=max_age)
+        return True, user_id, None
+    except SignatureExpired:
+        return False, None, "Password reset link has expired"
+    except BadSignature:
+        return False, None, "Invalid password reset link"
