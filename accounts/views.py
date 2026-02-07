@@ -118,8 +118,8 @@ class AuthViewSet(viewsets.GenericViewSet):
         user.is_active = True
         user.save(update_fields=["is_active"])
 
-        verification.is_used = True
-        verification.save(update_fields=["is_used"])
+        verification.is_verified = True
+        verification.save(update_fields=["is_verified"])
 
         refresh = RefreshToken.for_user(user)
         refresh["full_name"] = user.full_name
@@ -247,7 +247,7 @@ class AuthViewSet(viewsets.GenericViewSet):
                 email=email,
                 token=token,
                 label=VerificationCode.RESET_PASSWORD,
-                is_used=False,
+                is_verified=False,
             )
         except VerificationCode.DoesNotExist:
             return Response({"error": "Invalid or expired reset link."}, status=status.HTTP_400_BAD_REQUEST)
@@ -259,8 +259,8 @@ class AuthViewSet(viewsets.GenericViewSet):
         user.set_password(serializer.validated_data["new_password"])
         user.save(update_fields=["password"])
 
-        verification.is_used = True
-        verification.save(update_fields=["is_used"])
+        verification.is_verified = True
+        verification.save(update_fields=["is_verified"])
 
         return Response({"message": "Password has been reset successfully."}, status=status.HTTP_200_OK)
 

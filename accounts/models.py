@@ -154,7 +154,7 @@ class VerificationCode(models.Model):
     token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     label = models.CharField(max_length=30, choices=LABEL_CHOICES)
     email = models.EmailField()
-    is_used = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
     created_on = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -163,12 +163,12 @@ class VerificationCode(models.Model):
         ordering = ['-created_on']
         indexes = [
             models.Index(fields=['token']),
-            models.Index(fields=['email', 'is_used']),
+            models.Index(fields=['email', 'is_verified']),
             models.Index(fields=['created_on']),
         ]
 
     def __str__(self):
-        return f"{self.email} - {self.label} - {'Used' if self.is_used else 'Active'}"
+        return f"{self.email} - {self.label} - {'Used' if self.is_verified else 'Active'}"
 
     @property
     def is_expired(self):
@@ -177,4 +177,4 @@ class VerificationCode(models.Model):
 
     @property
     def is_valid(self):
-        return not self.is_used and not self.is_expired
+        return not self.is_verified and not self.is_expired

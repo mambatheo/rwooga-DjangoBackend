@@ -96,7 +96,7 @@ class VerifyEmailSerializer(serializers.Serializer):
             email=email,
             token=token,
             label=VerificationCode.REGISTER,
-            is_used=False
+            is_verified=False
         ).first()
 
         if not verification:

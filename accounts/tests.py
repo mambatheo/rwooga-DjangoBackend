@@ -149,7 +149,7 @@ class EmailVerificationTestCase(TestCase):
             email='mutheo2026@gmail.com'
         )
         self.assertEqual(verification.label, 'REGISTER')
-        self.assertFalse(verification.is_used)
+        self.assertFalse(verification.is_verified)
         self.assertFalse(verification.is_expired)
         self.assertTrue(verification.is_valid)
 
