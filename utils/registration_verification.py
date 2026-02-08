@@ -7,8 +7,9 @@ def send_registration_verification(user):
     # Create signed token containing user ID
     signer = TimestampSigner(salt='email-verification')
     token = signer.sign(str(user.id))
-   
-    verify_url = f"{settings.SITE_URL}/verify-email?token={token}"
+    
+    # Build verification URL with signed token (HashRouter format)
+    verify_url = f"{settings.SITE_URL}/#/verify-email?token={token}"
 
     context = {
         "full_name": user.full_name,

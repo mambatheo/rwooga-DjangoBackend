@@ -7,14 +7,18 @@ def send_password_reset_verification(user):
     # Create signed token containing user ID
     signer = TimestampSigner(salt='password-reset')
     token = signer.sign(str(user.id))    
-    # Build password reset URL with signed token
-    reset_url = f"{settings.SITE_URL}/reset-password?token={token}"
+    # Build password reset URL with signed token (HashRouter format)
+    reset_url = f"{settings.SITE_URL}/#/reset-password?token={token}"
 
     context = {
         "full_name": user.full_name,
         "reset_password_link": reset_url,         
         "company_name": settings.COMPANY_NAME,
         "company_logo_url": settings.COMPANY_LOGO_URL,
+        "youtube": settings.YOUTUBE,
+        "instagram": settings.INSTAGRAM,
+        "twitter": settings.TWITTER,
+        "tiktok": settings.TIKTOK,
         "youtube_icon_url": settings.YOUTUBE_ICON_URL,
         "instagram_icon_url": settings.INSTAGRAM_ICON_URL,
         "twitter_icon_url": settings.TWITTER_ICON_URL,
