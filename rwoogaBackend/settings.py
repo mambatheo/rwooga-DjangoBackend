@@ -140,6 +140,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://rwooga-project.vercel.app",
+    "https://rwooga-frontend.vercel.app"
     "https://www.rwooga.com", 
     "https://modern-noemi-rwooga3dservices-e96463f8.koyeb.app",
 ]
@@ -148,6 +149,7 @@ CORS_ALLOW_CREDENTIALS = True
 # CSRF Settings
 CSRF_TRUSTED_ORIGINS = [
     "https://rwooga-project.vercel.app",
+    "https://rwooga-frontend.vercel.app"
     "http://localhost:3000",
     "https://www.rwooga.com", 
     "https://modern-noemi-rwooga3dservices-e96463f8.koyeb.app",
