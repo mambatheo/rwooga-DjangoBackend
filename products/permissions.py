@@ -28,10 +28,11 @@ class CustomerCanCreateFeedback(permissions.BasePermission):
     Only staff can moderate (publish/unpublish)
     """
     def has_permission(self, request, view):
-       
-        if view.action in ['list', 'retrieve', 'create']:
+        if view.action in ['list', 'retrieve']:
             return True
-        
+
+        if view.action == 'create':
+            return request.user and request.user.is_authenticated
         # Only staff can update/delete feedback
         return request.user and request.user.is_authenticated and request.user.is_staff
 

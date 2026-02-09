@@ -12,6 +12,9 @@ class ServiceCategorySerializer(serializers.ModelSerializer):
             'name', 
             'slug', 
             'description', 
+            'requires_dimensions',
+            'requires_material',
+            'pricing_type',
             'is_active', 
             'created_at', 
             'updated_at', 
@@ -44,7 +47,7 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'category', 'category_name', 'name', 'slug', 
             'short_description', 'detailed_description', 'unit_price', 
-            'currency', 'material', 'length', 'width', 'height', 
+            'currency', 'length', 'width', 'height', 
             'product_volume', 'measurement_unit', 'available_sizes', 
             'available_colors', 'published', 
             'uploaded_by', 'created_at', 'updated_at', 'media', 
@@ -52,21 +55,39 @@ class ProductSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, data):
-        if data["length"] <= 0 or data["width"] <= 0 or data["height"] <= 0:
-            raise serializers.ValidationError("Product dimensions must be greater than zero.")
+        category = data.get('category') or (self.instance.category if self.instance else None)
+
+        if category:
+
+            # Only validate dimensions if category requires them
+            if category.requires_dimensions:
+                length = data.get("length")
+                width = data.get("width")
+                height = data.get("height")
+
+                if not all([length, width, height]):
+                    raise serializers.ValidationError(
+                        "Length, width, and height are required for this service category."
+                    )
+                if length <= 0 or width <= 0 or height <= 0:
+                    raise serializers.ValidationError(
+                        "Product dimensions must be greater than zero."
+                    )        
         return data
 
 
 class FeedbackSerializer(serializers.ModelSerializer):
+    user = serializers.UUIDField(source='user.id', read_only=True)
     product_name = serializers.ReadOnlyField(source='product.name')
+    user_name = serializers.ReadOnlyField(source='user.full_name')
 
     class Meta:
         model = Feedback
         fields = [
             'id', 'product', 'product_name', 'client_name', 
-            'message', 'rating', 'published', 'created_at'
+            'message', 'rating', 'published', 'created_at','user', 'user_name'
         ]
-        read_only_fields = ['id', 'published', 'created_at']
+        read_only_fields = ['id', 'published', 'created_at','user']
 
 
 class ProductListSerializer(serializers.ModelSerializer):
@@ -90,6 +111,12 @@ class ProductListSerializer(serializers.ModelSerializer):
         return None
 
 class CustomRequestSerializer(serializers.ModelSerializer):
+    service_category = serializers.PrimaryKeyRelatedField(
+        queryset=ServiceCategory.objects.all(),
+        required=False,
+        allow_null=True,
+        pk_field=serializers.UUIDField()
+    )
     service_category_name = serializers.CharField(source='service_category.name', read_only=True)
     
     class Meta:

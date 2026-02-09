@@ -4,20 +4,38 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.conf import settings
 from django.utils.text import slugify
+from django.core.validators import FileExtensionValidator
 
 class ServiceCategory(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=100, blank=True, null=True)
-    description = models.TextField( unique=True)
+    description = models.TextField()
+    
+    requires_dimensions = models.BooleanField(
+        default=False, 
+        help_text="Does this service need length/width/height?"
+    )
+    requires_material = models.BooleanField(
+        default=False, 
+        help_text="Does this service need material specification?"
+    )
+    pricing_type = models.CharField(
+        max_length=20,
+        choices=[
+            ('fixed', 'Fixed Price'),
+            ('custom', 'Custom Quote'),
+            
+        ],
+        default='custom'
+    )
     
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-
     class Meta:
-        ordering = [ "name"]
+        ordering = ["name"]
         verbose_name = "Service Category"
         verbose_name_plural = "Service Categories"
 
@@ -33,23 +51,20 @@ class ServiceCategory(models.Model):
 class Product(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     category = models.ForeignKey(ServiceCategory, on_delete=models.PROTECT, related_name="products")
-    name = models.CharField(max_length=200, unique=True)
+    name = models.CharField(max_length=200, blank=False, null=False)
     slug = models.SlugField(max_length=200, blank=True, null=True)
-    short_description = models.CharField(max_length=255, unique=True)
+    short_description = models.CharField(max_length=255, blank=False, null=False)
     detailed_description = models.TextField(max_length=2000, null=True, blank=True)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)], blank=True, null=True)
-    currency = models.CharField(max_length=3, default="RWF", blank=True)
-    material = models.CharField(max_length=100, blank=True)
-
+    currency = models.CharField(max_length=3, default="RWF", blank=True, null=True)
+    
     length = models.DecimalField(max_digits=6, decimal_places=2, validators=[MinValueValidator(0)], blank=True, null=True)
     width = models.DecimalField(max_digits=6, decimal_places=2, validators=[MinValueValidator(0)], blank=True, null=True)
     height = models.DecimalField(max_digits=6, decimal_places=2, validators=[MinValueValidator(0)], blank=True, null=True)
-
-    #product_volume = models.DecimalField(max_digits=10, decimal_places=2, editable=False, null=True, blank=True)
-    measurement_unit = models.CharField(max_length=10, default="cm", blank=True)
+    measurement_unit = models.CharField(max_length=10, default="cm^3", blank=True, null=True)
  
     published = models.BooleanField(default=False)
-    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -64,8 +79,34 @@ class Product(models.Model):
 
     @property
     def product_volume(self):
-        return self.length * self.width * self.height
+        if self.length and self.width and self.height:
+            return self.length * self.width * self.height
+        return None
 
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        errors = {}
+
+        if self.category:
+            # Check if dimensions are required
+            if self.category.requires_dimensions:
+                if not self.length:
+                    errors['length'] = 'Length is required for this service category.'
+                if not self.width:
+                    errors['width'] = 'Width is required for this service category.'
+                if not self.height:
+                    errors['height'] = 'Height is required for this service category.'
+        
+            # Check if material is required
+            if self.category.requires_material and not self.material:
+                errors['material'] = 'Material is required for this service category.'
+        
+            # Check pricing based on category pricing type
+            if self.category.pricing_type == 'fixed' and not self.unit_price:
+                errors['unit_price'] = 'Price is required for fixed-price services.'
+        if errors:
+            raise ValidationError(errors)
+    
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
@@ -113,6 +154,12 @@ class ProductMedia(models.Model):
         verbose_name = "Product Media"
         verbose_name_plural = "Product Media"
     
+    def clean(self):
+        if not any([self.image, self.video_file, self.video_url, self.model_3d]):
+            raise ValidationError('At least one media file (image, video, or 3D model) must be provided.')
+
+    def __str__(self):
+        return f"{self.product.name} - Media {self.display_order}"
 
 class Feedback(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -158,11 +205,12 @@ class CustomRequest(models.Model):
     
     
     reference_file = models.FileField(
-        upload_to="custom_requests/", 
-        blank=True, 
-        null=True,
-        help_text="Upload reference images or sketches"
-    )
+    upload_to="custom_requests/", 
+    blank=True, 
+    null=True,
+    validators=[FileExtensionValidator(allowed_extensions=['pdf', 'jpg', 'jpeg', 'png', 'stl', 'obj'])],
+    help_text="Upload reference images or sketches"
+)
     
     budget = models.DecimalField(
         max_digits=10, 

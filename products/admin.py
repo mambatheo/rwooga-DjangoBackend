@@ -14,7 +14,7 @@ class FeedbackInline(admin.TabularInline):
 
 @admin.register(ServiceCategory)
 class ServiceCategoryAdmin(admin.ModelAdmin):
-    list_display = ['name', 'slug', 'is_active', 'created_at']
+    list_display = ['id','name', 'slug', 'is_active', 'created_at']
     list_filter = ['is_active']
     search_fields = ['name']
     prepopulated_fields = {'slug': ('name',)}
@@ -22,7 +22,7 @@ class ServiceCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'category', 'unit_price', 'published', 'created_at']
+    list_display = ['id','name', 'category', 'unit_price', 'published', 'created_at']
     list_filter = ['published', 'category', 'created_at']
     search_fields = ['name', 'short_description']
     readonly_fields = ['created_at', 'updated_at']

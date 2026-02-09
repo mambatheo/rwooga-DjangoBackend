@@ -90,7 +90,11 @@ class FeedbackViewSet(viewsets.ModelViewSet):
     queryset = Feedback.objects.all()
     serializer_class = FeedbackSerializer
     permission_classes = [CustomerCanCreateFeedback]
+    authentication_classes = []
     
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
     def get_queryset(self):
         qs = super().get_queryset()
         
@@ -120,20 +124,7 @@ class CustomRequestViewSet(viewsets.ModelViewSet):
     serializer_class = CustomRequestSerializer
     permission_classes = [AnyoneCanCreateRequest]
     
-    def get_queryset(self):
-        qs = super().get_queryset()
-        
-        # Filter by status
-        status = self.request.query_params.get('status')
-        if status:
-            qs = qs.filter(status=status)
-        
-        # Filter by service category
-        category = self.request.query_params.get('category')
-        if category:
-            qs = qs.filter(service_category_id=category)
-        
-        return qs
+    
     
     @action(detail=True, methods=['post'], permission_classes=[IsStaffOnly])
     def update_status(self, request, pk=None):
