@@ -18,6 +18,7 @@ def send_password_reset_verification(user):
         "company_logo_url": settings.COMPANY_LOGO_URL,
         "youtube": settings.YOUTUBE,
         "instagram": settings.INSTAGRAM,
+        "linkdin": settings.LINKDIN,
         "twitter": settings.TWITTER,
         "tiktok": settings.TIKTOK,
         "youtube_icon_url": settings.YOUTUBE_ICON_URL,

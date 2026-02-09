@@ -23,6 +23,7 @@ def send_registration_verification(user):
         "tiktok_icon_url": settings.TIKTOK_ICON_URL,
         "youtube": settings.YOUTUBE,
         "instagram": settings.INSTAGRAM,
+        "linkdin": settings.LINKDIN,
         "twitter": settings.TWITTER,
         "tiktok": settings.TIKTOK,
         "support_email": settings.SUPPORT_EMAIL,
