@@ -169,7 +169,7 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
 # Social Media
 YOUTUBE = config('YOUTUBE', default='https://www.youtube.com')
 INSTAGRAM = config('INSTAGRAM', default='https://www.instagram.com')
-LINKEDIN = config('LINKEDIN',default='')
+LINKEDIN = config('LINKEDIN',default='https://www.linkedin.com')
 TWITTER = config('TWITTER', default='https://www.x.com')
 TIKTOK = config('TIKTOK', default='https://www.tiktok.com')
 COMPANY_URL=config('COMPANY_URL', default='')
