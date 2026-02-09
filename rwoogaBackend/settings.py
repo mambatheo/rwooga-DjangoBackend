@@ -171,6 +171,7 @@ YOUTUBE = config('YOUTUBE', default='https://www.youtube.com')
 INSTAGRAM = config('INSTAGRAM', default='https://www.instagram.com')
 TWITTER = config('TWITTER', default='https://www.x.com')
 TIKTOK = config('TIKTOK', default='https://www.tiktok.com')
+COMPANY_URL=config('COMPANY_NAME', default='')
 
 # Logo and Icons
 COMPANY_LOGO_URL = config('COMPANY_LOGO_URL', default='')

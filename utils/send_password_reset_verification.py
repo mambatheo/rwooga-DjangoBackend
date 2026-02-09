@@ -14,6 +14,7 @@ def send_password_reset_verification(user):
         "full_name": user.full_name,
         "reset_password_link": reset_url,         
         "company_name": settings.COMPANY_NAME,
+        "company_url":settings.COMPANY_URL,
         "company_logo_url": settings.COMPANY_LOGO_URL,
         "youtube": settings.YOUTUBE,
         "instagram": settings.INSTAGRAM,

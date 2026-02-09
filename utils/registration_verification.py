@@ -15,6 +15,7 @@ def send_registration_verification(user):
         "full_name": user.full_name,
         "verification_link": verify_url,
         "company_name": settings.COMPANY_NAME,
+        "company_url":settings.COMPANY_URL,
         "company_logo_url": settings.COMPANY_LOGO_URL,
         "youtube_icon_url": settings.YOUTUBE_ICON_URL,
         "instagram_icon_url": settings.INSTAGRAM_ICON_URL,
