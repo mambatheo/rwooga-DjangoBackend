@@ -178,6 +178,7 @@ COMPANY_URL=config('COMPANY_NAME', default='')
 COMPANY_LOGO_URL = config('COMPANY_LOGO_URL', default='')
 YOUTUBE_ICON_URL = config('YOUTUBE_ICON_URL', default='')
 INSTAGRAM_ICON_URL = config('INSTAGRAM_ICON_URL', default='')
+LINKDIN_ICON_URL = config('LINKDIN_ICON_URL', default='')
 TWITTER_ICON_URL = config('TWITTER_ICON_URL', default='')
 TIKTOK_ICON_URL = config('TIKTOK_ICON_URL', default='')
 
