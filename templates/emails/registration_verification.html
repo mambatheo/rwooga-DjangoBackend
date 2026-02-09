@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify Your Email</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #ffffff; padding: 20px;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden;">
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0a0a0a; padding: 20px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background-color: #0a0a0a; border-radius: 8px; overflow: hidden;">
         
         <!-- Logo Section -->
         <tr>
-            <td style="background-color: #1a3a2e; padding: 25px 30px; text-align: center;">
+            <td style="background-color: #0a0a0a; padding: 15px 30px; text-align: center;">
                 <a href="{{ company_url }}" style="display: inline-block; text-decoration: none;">
                     <img src="{{ company_logo_url }}" alt="{{ company_name }} Logo" style="max-width: 180px; height: auto; display: block; margin: 0 auto;">
                 </a>
@@ -19,23 +19,23 @@
         
         <!-- Header -->
         <tr>
-            <td style="background-color: #1a3a2e; padding: 30px 30px 50px 30px; text-align: center;">
+            <td style="background-color: #0a0a0a; padding: 20px 30px 35px 30px; text-align: center;">
                 <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #ffffff; margin-bottom: 10px;">Welcome!</h1>
-                <p style="margin: 0; font-size: 16px; color: rgba(255, 255, 255, 0.85);">You're just one step away from getting started</p>
+                <p style="margin: 0; font-size: 16px; color: #9ca3af;">You're just one step away from getting started</p>
             </td>
         </tr>
         
         <!-- Body -->
         <tr>
-            <td style="padding: 45px 35px; background-color: #ffffff;">
+            <td style="padding: 45px 35px; background-color: #0a0a0a;">
                 
                 <!-- Greeting -->
-                <p style="margin: 0 0 25px 0; font-size: 18px; font-weight: 600; color: #1a3a2e;">
-                    Hello <span style="color: #2d5f4d;">{{ full_name }}</span>,
+                <p style="margin: 0 0 25px 0; font-size: 18px; font-weight: 600; color: #ffffff;">
+                    Hello <span style="color: #77ff00;">{{ full_name }}</span>,
                 </p>
                 
                 <!-- Message -->
-                <p style="margin: 0 0 30px 0; font-size: 15px; color: #2d5f4d; line-height: 1.7;">
+                <p style="margin: 0 0 30px 0; font-size: 15px; color: #9ca3af; line-height: 1.7;">
                     Thank you for registering with {{ company_name }}! To complete your registration and activate your account, please verify your email address by clicking the button below.
                 </p>
                 
@@ -43,12 +43,12 @@
                 <table width="100%" cellpadding="0" cellspacing="0" style="margin: 35px 0;">
                     <tr>
                         <td align="center">
-                            <a href="{{ verification_link }}" style="display: inline-block; background-color: #2d5f4d; color: #ffffff; font-weight: 600; padding: 16px 45px; text-decoration: none; border-radius: 6px; font-size: 16px;">Verify Email Address</a>
+                            <a href="{{ verification_link }}" style="display: inline-block; background-color: #77ff00; color: #0a0a0a; font-weight: 600; padding: 16px 45px; text-decoration: none; border-radius: 6px; font-size: 16px;">Verify Email Address</a>
                         </td>
                     </tr>
                     <tr>
                         <td align="center" style="padding-top: 15px;">
-                            <p style="margin: 0; font-size: 13px; color: #2d5f4d;">This link expires in {{ expiry_minutes }} minutes</p>
+                            <p style="margin: 0; font-size: 13px; color: #9ca3af;">This link expires in {{ expiry_minutes }} minutes</p>
                         </td>
                     </tr>
                 </table>
@@ -56,9 +56,9 @@
                 <!-- Alternative Link -->
                 <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
                     <tr>
-                        <td style="background-color: #f5f5f5; border-left: 3px solid #77ff00; padding: 20px; border-radius: 4px;">
-                            <p style="margin: 0 0 10px 0; font-size: 13px; color: #1a3a2e; font-weight: 600;">Button not working?</p>
-                            <p style="margin: 0; font-size: 12px; color: #2d5f4d; word-break: break-all;">
+                        <td style="background-color: #1a1a1a; border-left: 3px solid #77ff00; padding: 20px; border-radius: 4px;">
+                            <p style="margin: 0 0 10px 0; font-size: 13px; color: #ffffff; font-weight: 600;">Button not working?</p>
+                            <p style="margin: 0; font-size: 12px; color: #9ca3af; word-break: break-all;">
                                 Copy and paste this link: <a href="{{ verification_link }}" style="color: #77ff00; text-decoration: none;">{{ verification_link }}</a>
                             </p>
                         </td>
@@ -68,56 +68,52 @@
                 <!-- Security Notice -->
                 <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
                     <tr>
-                        <td style="background-color: #f5f5f5; border-left: 3px solid #1a3a2e; padding: 18px; border-radius: 4px;">
-                            <p style="margin: 0 0 5px 0; color: #1a3a2e; font-size: 14px; font-weight: 600;"> Security Notice</p>
-                            <p style="margin: 0; color: #2d5f4d; font-size: 13px; line-height: 1.6;">
+                        <td style="background-color: #1a1a1a; border-left: 3px solid #77ff00; padding: 18px; border-radius: 4px;">
+                            <p style="margin: 0 0 5px 0; color: #ffffff; font-size: 14px; font-weight: 600;"> Security Notice</p>
+                            <p style="margin: 0; color: #9ca3af; font-size: 13px; line-height: 1.6;">
                                 If you didn't create an account, please ignore this email. Your email will not be registered.
                             </p>
                         </td>
                     </tr>
-                </table>               
+                </table>                
               
-                
                 <!-- Signature -->
-                <p style="margin: 30px 0 0 0; font-size: 14px; color: #1a3a2e;">
+                <p style="margin: 30px 0 0 0; font-size: 14px; color: #ffffff;">
                     Best regards,<br>
-                    <strong style="color: #2d5f4d;"> {{ company_name }} Team</strong>
+                    <strong style="color: #77ff00;">{{ company_name }} Team</strong>
                 </p>
             </td>
         </tr>
         
         <!-- Footer -->
         <tr>
-            <td style="background-color: #1a3a2e; padding: 30px; text-align: center;">
-                <p style="margin: 0 0 20px 0; font-size: 13px; color: rgba(255, 255, 255, 0.7);">Follow us on social media</p>
+            <td style="background-color: #0a0a0a; padding: 30px; text-align: center; border-top: 1px solid #1a1a1a;">
+                <p style="margin: 0 0 20px 0; font-size: 13px; color: #9ca3af;">Follow us on social media</p>
                 
                 <!-- Social Links -->
                 <table width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 20px 0;">
-                    <table width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 20px 0;">
-                        <tr>
-                            <td align="center">
-                                <a href="{{ instagram }}" style="display: inline-block; margin: 0 12px;">
-                                    <img src="{{ instagram_icon_url }}" alt="Instagram" style="width: 40px; height: 40px; display: block;">
-                                </a>
-                                <a href="{{ linkdin }}" style="display: inline-block; margin: 0 12px;">
-                                    <img src="{{ linkdin_icon_url }}" alt="LinkedIn" style="width: 40px; height: 40px; display: block;">
-                                </a>
-                                <a href="{{ twitter }}" style="display: inline-block; margin: 0 12px;">
-                                    <img src="{{ twitter_icon_url }}" alt="Twitter" style="width: 40px; height: 40px; display: block;">
-                                </a>
-                                <a href="{{ tiktok }}" style="display: inline-block; margin: 0 12px;">
-                                    <img src="{{ tiktok_icon_url }}" alt="TikTok" style="width: 40px; height: 40px; display: block;">
-                                </a>
-                                <a href="{{ youtube }}" style="display: inline-block; margin: 0 12px;">
-                                    <img src="{{ youtube_icon_url }}" alt="YouTube" style="width: 40px; height: 40px; display: block;">
-                                </a>
-                            </td>
-                        </tr>
-                    </table>
-    
+                    <tr>
+                        <td align="center">
+                            <a href="{{ instagram }}" style="display: inline-block; margin: 0 12px;">
+                                <img src="{{ instagram_icon_url }}" alt="Instagram" style="width: 40px; height: 40px; display: block;">
+                            </a>
+                            <a href="{{ linkdin }}" style="display: inline-block; margin: 0 12px;">
+                                <img src="{{ linkdin_icon_url }}" alt="LinkedIn" style="width: 40px; height: 40px; display: block;">
+                            </a>
+                            <a href="{{ twitter }}" style="display: inline-block; margin: 0 12px;">
+                                <img src="{{ twitter_icon_url }}" alt="Twitter" style="width: 40px; height: 40px; display: block;">
+                            </a>
+                            <a href="{{ tiktok }}" style="display: inline-block; margin: 0 12px;">
+                                <img src="{{ tiktok_icon_url }}" alt="TikTok" style="width: 40px; height: 40px; display: block;">
+                            </a>
+                            <a href="{{ youtube }}" style="display: inline-block; margin: 0 12px;">
+                                <img src="{{ youtube_icon_url }}" alt="YouTube" style="width: 40px; height: 40px; display: block;">
+                            </a>
+                        </td>
+                    </tr>
                 </table>
                 
-                <p style="margin: 0; font-size: 12px; color: rgba(255, 255, 255, 0.5);">© 2026 {{ company_name }}. All rights reserved.</p>
+                <p style="margin: 0; font-size: 12px; color: #64748b;">© 2026 {{ company_name }}. All rights reserved.</p>
             </td>
         </tr>
     </table>
