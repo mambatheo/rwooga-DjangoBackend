@@ -15,14 +15,14 @@ class FeedbackInline(admin.TabularInline):
 
 @admin.register(ServiceCategory)
 class ServiceCategoryAdmin(admin.ModelAdmin):
-    list_display = ['name', 'is_active', 'display_order', 'created_at']
+    list_display = ['id', 'name', 'is_active', 'display_order', 'created_at']
     list_filter = ['is_active']
     search_fields = ['name']
     ordering = ['display_order']
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'category', 'unit_price', 'published', 'created_at']
+    list_display = ['id', 'name', 'category', 'unit_price', 'published', 'created_at']
     list_filter = ['published', 'category', 'created_at']
     search_fields = ['name', 'short_description']
     readonly_fields = ['slug','product_volume', 'created_at', 'updated_at']
@@ -75,6 +75,7 @@ class FeedbackAdmin(admin.ModelAdmin):
 @admin.register(Discount)
 class DiscountAdmin(admin.ModelAdmin):
     list_display = (
+        "id",
         "name",
         "discount_type",
         "discount_value",

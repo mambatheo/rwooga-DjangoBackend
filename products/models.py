@@ -65,7 +65,7 @@ class Product(models.Model):
         null=True,
         blank=True
     )
-    measurement_unit = models.CharField(max_length=10, default="cm")
+    measurement_unit = models.CharField(max_length=10, default="cm^3")
 
     published = models.BooleanField(default=False)
     uploaded_by = models.ForeignKey(
@@ -201,7 +201,7 @@ class Discount(models.Model):
         (PERCENTAGE, "Percentage"),
         (FIXED, "Fixed amount"),
     ]
-
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)
     discount_type = models.CharField(max_length=20, choices=DISCOUNT_TYPE_CHOICES)
     discount_value = models.DecimalField(max_digits=10, decimal_places=2)
@@ -235,7 +235,7 @@ class ProductDiscount(models.Model):
         on_delete=models.CASCADE,
         related_name="product_discounts"
     )
-
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     is_valid = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
