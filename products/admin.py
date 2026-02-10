@@ -99,15 +99,15 @@ class CustomRequestAdmin(admin.ModelAdmin):
     actions = ['mark_in_progress', 'mark_completed', 'mark_cancelled']
     
     def mark_in_progress(self, request, queryset):
-        queryset.update(status='in_progress')
+        queryset.update(status='IN_PROGRESS')
     mark_in_progress.short_description = "Mark as In Progress"
     
     def mark_completed(self, request, queryset):
-        queryset.update(status='completed')
+        queryset.update(status='COMPLETED')
     mark_completed.short_description = "Mark as Completed"
     
     def mark_cancelled(self, request, queryset):
-        queryset.update(status='cancelled')
+        queryset.update(status='CANCELLED')
     mark_cancelled.short_description = "Mark as Cancelled"
 
 

@@ -133,7 +133,7 @@ class CustomRequestViewSet(viewsets.ModelViewSet):
         custom_request = self.get_object()
         new_status = request.data.get('status')
         
-        if new_status not in ['pending', 'in_progress', 'completed', 'cancelled']:
+        if new_status not in ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']:
             return Response(
                 {"error": "Invalid status"}, 
                 status=status.HTTP_400_BAD_REQUEST
