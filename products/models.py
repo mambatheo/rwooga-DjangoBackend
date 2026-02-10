@@ -30,9 +30,6 @@ class ServiceCategory(models.Model):
         return self.name
 
 
-# -------------------------
-# Product
-# -------------------------
 class Product(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     category = models.ForeignKey(
@@ -116,9 +113,6 @@ class Product(models.Model):
         return self.name
 
 
-# -------------------------
-# Validators
-# -------------------------
 def validate_image_size(file):
     limit_mb = 110
     if file.size > limit_mb * 1024 * 1024:
@@ -131,9 +125,6 @@ def validate_video_size(file):
         raise ValidationError(f"Max file size is {limit_mb}MB")
 
 
-# -------------------------
-# Product Media
-# -------------------------
 class ProductMedia(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product = models.ForeignKey(
@@ -168,9 +159,6 @@ class ProductMedia(models.Model):
         return f"Media for {self.product.name}"
 
 
-# -------------------------
-# Feedback
-# -------------------------
 class Feedback(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product = models.ForeignKey(
@@ -190,9 +178,6 @@ class Feedback(models.Model):
         return f"{self.client_name} - {self.product.name}"
 
 
-# -------------------------
-# Discount
-# -------------------------
 class Discount(models.Model):
     PERCENTAGE = "percentage"
     FIXED = "fixed"
@@ -221,9 +206,6 @@ class Discount(models.Model):
         return self.name
 
 
-# -------------------------
-# Product Discount (M2M)
-# -------------------------
 class ProductDiscount(models.Model):
     product = models.ForeignKey(
         Product,
