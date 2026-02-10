@@ -3,7 +3,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Avg
-from .models import ServiceCategory, Product, ProductMedia, Feedback, CustomRequest, Wishlist
+from .models import ServiceCategory, Product, ProductMedia, Feedback, CustomRequest, Wishlist, WishlistItem
 from .permissions import AnyoneCanCreateRequest, AnyoneCanCreateRequest, IsAdminOrStaffOrReadOnly, IsOwnerOnly, IsStaffOnly, CustomerCanCreateFeedback
 from .serializers import (
     CustomRequestSerializer,
@@ -14,6 +14,7 @@ from .serializers import (
     ProductMediaSerializer,
     FeedbackSerializer,
     WishlistSerializer,
+    WishlistItemSerializer,
 )
 
 
@@ -127,16 +128,43 @@ class CustomRequestViewSet(viewsets.ModelViewSet):
     
     
  
-class WishlistViewSet(viewsets.ModelViewSet):
+class WishlistViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Retrieve user's wishlist
+    Use WishlistItemViewSet to add/remove items
+    """
     serializer_class = WishlistSerializer
     permission_classes = [IsOwnerOnly]
     
     def get_queryset(self):
-        # Users only see their own wishlist
         return Wishlist.objects.filter(user=self.request.user)
     
+    @action(detail=False, methods=['get'])
+    def my_wishlist(self, request):
+        """Get or create user's wishlist"""
+        wishlist, created = Wishlist.objects.get_or_create(user=request.user)
+        serializer = self.get_serializer(wishlist)
+        return Response(serializer.data)
+
+
+class WishlistItemViewSet(viewsets.ModelViewSet):
+    """
+    Manage wishlist items (add/remove products)
+    """
+    serializer_class = WishlistItemSerializer
+    permission_classes = [IsOwnerOnly]
+    
+    def get_queryset(self):
+        # Get user's wishlist items
+        wishlist = Wishlist.objects.filter(user=self.request.user).first()
+        if wishlist:
+            return WishlistItem.objects.filter(wishlist=wishlist)
+        return WishlistItem.objects.none()
+    
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        # Get or create user's wishlist
+        wishlist, created = Wishlist.objects.get_or_create(user=self.request.user)
+        serializer.save(wishlist=wishlist)
     
     @action(detail=False, methods=['post'])
     def toggle(self, request):
@@ -157,9 +185,12 @@ class WishlistViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        # Check if already in wishlist
-        wishlist_item = Wishlist.objects.filter(
-            user=request.user, 
+        # Get or create wishlist
+        wishlist, created = Wishlist.objects.get_or_create(user=request.user)
+        
+        # Check if item already in wishlist
+        wishlist_item = WishlistItem.objects.filter(
+            wishlist=wishlist, 
             product=product
         ).first()
         
@@ -172,8 +203,20 @@ class WishlistViewSet(viewsets.ModelViewSet):
             })
         else:
             # Add to wishlist
-            Wishlist.objects.create(user=request.user, product=product)
+            WishlistItem.objects.create(wishlist=wishlist, product=product)
             return Response({
                 "message": "Added to wishlist",
                 "in_wishlist": True
             }, status=status.HTTP_201_CREATED)
+    
+    @action(detail=False, methods=['delete'])
+    def clear(self, request):
+        """Clear all items from wishlist"""
+        wishlist = Wishlist.objects.filter(user=request.user).first()
+        if wishlist:
+            count = wishlist.items.count()
+            wishlist.items.all().delete()
+            return Response({
+                "message": f"Removed {count} items from wishlist"
+            })
+        return Response({"message": "Wishlist is already empty"})

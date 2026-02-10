@@ -204,7 +204,7 @@ class CustomRequestModelTest(TestCase):
     
     def test_custom_request_creation(self):
         self.assertEqual(self.request.client_name, 'Jane Doe')
-        self.assertEqual(self.request.status, 'pending')
+        self.assertEqual(self.request.status, 'PENDING')
     
     def test_custom_request_str(self):
         self.assertEqual(str(self.request), 'Jane Doe - Custom Design Request')

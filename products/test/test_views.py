@@ -308,15 +308,15 @@ class CustomRequestViewTest(TestSetup):
             description='Test'
         )
         
-        url = f'{self.custom_request_url}{custom_request.id}/update_status/'
+        url = f'{self.custom_request_url}{custom_request.id}/'
         
         # Staff can update
         self.client.force_authenticate(user=self.staff_user)
-        response = self.client.post(url, {'status': 'in_progress'})
+        response = self.client.patch(url, {'status': 'COMPLETED'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         custom_request.refresh_from_db()
-        self.assertEqual(custom_request.status, 'in_progress')
+        self.assertEqual(custom_request.status, 'COMPLETED')
     
     def test_update_status_invalid(self):
         """Invalid status should be rejected"""
@@ -328,8 +328,8 @@ class CustomRequestViewTest(TestSetup):
             description='Test'
         )
         
-        url = f'{self.custom_request_url}{custom_request.id}/update_status/'
+        url = f'{self.custom_request_url}{custom_request.id}/'
         
-        self.client.force_authenticate(user=self.staff_user)
-        response = self.client.post(url, {'status': 'invalid_status'})
+        self.client.force_authenticate(user=self.staff_user)       
+        response = self.client.patch(url, {'status': 'INVALID_STATUS_NAME'})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

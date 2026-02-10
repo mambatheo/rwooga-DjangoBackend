@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_field
-from .models import CustomRequest, ServiceCategory, Product, ProductMedia, Feedback, Wishlist
+from .models import CustomRequest, ServiceCategory, Product, ProductMedia, Feedback, Wishlist, WishlistItem
 
 class ServiceCategorySerializer(serializers.ModelSerializer):
     product_count = serializers.SerializerMethodField()
@@ -127,7 +127,7 @@ class CustomRequestSerializer(serializers.ModelSerializer):
             'description', 'reference_file', 'budget', 'status',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'status', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
 
     def validate_status(self, value):
         if value not in ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']:
@@ -153,19 +153,19 @@ class CustomRequestSerializer(serializers.ModelSerializer):
         return instance
 
 
-class WishlistSerializer(serializers.ModelSerializer):
+class WishlistItemSerializer(serializers.ModelSerializer):
     product_name = serializers.ReadOnlyField(source='product.name')
     product_price = serializers.ReadOnlyField(source='product.unit_price')
+    product_slug = serializers.ReadOnlyField(source='product.slug')
     product_thumbnail = serializers.SerializerMethodField()
-    user = serializers.UUIDField(source='user.id', read_only=True)
     
     class Meta:
-        model = Wishlist
+        model = WishlistItem
         fields = [
-            'id', 'user', 'product', 'product_name', 
-            'product_price', 'product_thumbnail', 'created_at'
+            'id', 'wishlist', 'product', 'product_name', 
+            'product_price', 'product_slug', 'product_thumbnail', 'created_at'
         ]
-        read_only_fields = ['id', 'user', 'created_at']
+        read_only_fields = ['id', 'wishlist', 'created_at']
     
     @extend_schema_field(serializers.URLField(allow_null=True))
     def get_product_thumbnail(self, obj) -> str:
@@ -173,4 +173,17 @@ class WishlistSerializer(serializers.ModelSerializer):
         if first_media and first_media.image:
             return first_media.image.url
         return None
+
+
+class WishlistSerializer(serializers.ModelSerializer):
+    items = WishlistItemSerializer(many=True, read_only=True)
+    item_count = serializers.IntegerField(read_only=True)
+    user_name = serializers.ReadOnlyField(source='user.full_name')
     
+    class Meta:
+        model = Wishlist
+        fields = [
+            'id', 'user', 'user_name', 'item_count', 
+            'items', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'user', 'created_at', 'updated_at']
