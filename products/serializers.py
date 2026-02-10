@@ -129,6 +129,29 @@ class CustomRequestSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'status', 'created_at', 'updated_at']
 
+    def validate_status(self, value):
+        if value not in ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']:
+            raise serializers.ValidationError("Invalid status")
+        return value
+    def update(self, instance, validated_data):
+        request = self.context.get('request')
+        if request and request.user and request.user.is_staff:
+            status = validated_data.get('status')
+            if status:
+                instance.status = status
+        
+        instance.client_name = validated_data.get('client_name', instance.client_name)
+        instance.client_email = validated_data.get('client_email', instance.client_email)
+        instance.client_phone = validated_data.get('client_phone', instance.client_phone)
+        instance.service_category = validated_data.get('service_category', instance.service_category)
+        instance.title = validated_data.get('title', instance.title)
+        instance.description = validated_data.get('description', instance.description)
+        instance.reference_file = validated_data.get('reference_file', instance.reference_file)
+        instance.budget = validated_data.get('budget', instance.budget)
+
+        instance.save()
+        return instance
+
 
 class WishlistSerializer(serializers.ModelSerializer):
     product_name = serializers.ReadOnlyField(source='product.name')
@@ -150,5 +173,4 @@ class WishlistSerializer(serializers.ModelSerializer):
         if first_media and first_media.image:
             return first_media.image.url
         return None
-    
     

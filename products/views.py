@@ -126,28 +126,7 @@ class CustomRequestViewSet(viewsets.ModelViewSet):
     permission_classes = [AnyoneCanCreateRequest]
     
     
-    
-    @action(detail=True, methods=['post'], permission_classes=[IsStaffOnly])
-    def update_status(self, request, pk=None):
-        """Update request status (staff only)"""
-        custom_request = self.get_object()
-        new_status = request.data.get('status')
-        
-        if new_status not in ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']:
-            return Response(
-                {"error": "Invalid status"}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        custom_request.status = new_status
-        custom_request.save()
-        
-        return Response({
-            "status": custom_request.status,
-            "message": f"Request status updated to {new_status}"
-        })
-  
-
+ 
 class WishlistViewSet(viewsets.ModelViewSet):
     serializer_class = WishlistSerializer
     permission_classes = [IsOwnerOnly]
