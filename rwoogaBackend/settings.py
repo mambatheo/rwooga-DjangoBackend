@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',  
     'corsheaders',
+    'dj-database-url',
     'django_extensions',
     'django_filters',
     'drf_spectacular',   
@@ -88,11 +89,11 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('DB_NAME'),
-            'USER': config('DB_USER'),
-            'PASSWORD': config('DB_PASSWORD'),
-            'HOST': config('DB_HOST', default='localhost'),
-            'PORT': config('DB_PORT', cast=int, default=5432),
+            'NAME': config('NAME'),
+            'USER': config('USER'),
+            'PASSWORD': config('PASSWORD'),
+            'HOST': config('HOST', default='localhost'),
+            'PORT': config('PORT', cast=int, default=5432),
             'OPTIONS': {
                 'sslmode': 'require',  
             },
@@ -161,21 +162,16 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "https://rwooga-project.vercel.app",
     "https://www.rwooga.com",
-    "https://rwooga-project.vercel.app/",
+    
 ]
+CORS_ALLOW_CREDENTIALS = True
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://rwooga-project.vercel.app",
-    "https://rwooga-frontend.vercel.app",
-    "http://localhost:3000",    
-    "https://modern-noemi-rwooga3dservices-e96463f8.koyeb.app",  
-]
-# Site Configuration
-SITE_URL = config('SITE_URL', default='http://localhost:3000')
-COMPANY_NAME = config('COMPANY_NAME', default='Rwooga')
-SUPPORT_EMAIL = config('SUPPORT_EMAIL', default='support@rwooga.com')
-EMAIL_VERIFICATION_EXPIRY_MINUTES = config('EMAIL_VERIFICATION_EXPIRY_MINUTES', default=30, cast=int)  
-PASSWORD_RESET_EXPIRY_MINUTES = config('PASSWORD_RESET_EXPIRY_MINUTES', default=30, cast=int)  
+
+
+SITE_URL =  "https://rwooga-project.vercel.app"   
+COMPANY_NAME = "Rwooga"                 
+SUPPORT_EMAIL = "support@rwooga.com"
+VERIFICATION_CODE_EXPIRY_MINUTES = 10 
 
 
 # Email Configuration
@@ -193,33 +189,7 @@ COMPANY_NAME = config('COMPANY_NAME', default='Rwooga')
 SUPPORT_EMAIL = config('SUPPORT_EMAIL', default='support@rwooga.com')
 VERIFICATION_CODE_EXPIRY_MINUTES = config('VERIFICATION_CODE_EXPIRY_MINUTES', default=10, cast=int)
 
-# Security Settings
-MAX_LOGIN_ATTEMPTS = config('MAX_LOGIN_ATTEMPTS', default=5, cast=int)
-ACCOUNT_LOCKOUT_MINUTES = config('ACCOUNT_LOCKOUT_MINUTES', default=30, cast=int)
-VERIFICATION_RESEND_COOLDOWN_MINUTES = config('VERIFICATION_RESEND_COOLDOWN_MINUTES', default=2, cast=int)
 
-# Session Settings
-SESSION_COOKIE_AGE = 86400  # 24 hours
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax'
-
-# CSRF Settings
-CSRF_COOKIE_HTTPONLY = True
-CSRF_COOKIE_SAMESITE = 'Lax'
-
-# Security Headers
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY'
-
-# Production Security (only when DEBUG=False)
-if not DEBUG:
-    SECURE_SSL_REDIRECT = True
-    SECURE_HSTS_SECONDS = 31536000
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
 
 # REST Framework Configuration
 REST_FRAMEWORK = {
