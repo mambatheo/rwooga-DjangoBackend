@@ -1,4 +1,5 @@
 import uuid
+import random
 from datetime import timedelta
 
 from django.db import models
@@ -152,6 +153,7 @@ class VerificationCode(models.Model):
     )
 
     token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    code = models.CharField(max_length=6, null=True, blank=True, db_index=True)  
     label = models.CharField(max_length=30, choices=LABEL_CHOICES)
     email = models.EmailField()
     is_verified = models.BooleanField(default=False)
@@ -169,6 +171,11 @@ class VerificationCode(models.Model):
 
     def __str__(self):
         return f"{self.email} - {self.label} - {'Used' if self.is_verified else 'Active'}"
+
+    @staticmethod
+    def generate_code():
+        """Generate a random 6-digit verification code"""
+        return ''.join([str(random.randint(0, 9)) for _ in range(6)])
 
     @property
     def is_expired(self):
