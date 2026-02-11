@@ -79,7 +79,7 @@ coverage.xml
 celerybeat-schedule
 celerybeat.pid
 # Logs
-logs/
+# logs/
 
 # Distribution / packaging
 build/
