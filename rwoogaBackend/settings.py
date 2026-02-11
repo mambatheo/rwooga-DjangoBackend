@@ -137,12 +137,14 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Email context variables
 COMPANY_LOGO_URL = config('COMPANY_LOGO_URL', default='')
 YOUTUBE = config('YOUTUBE', default='https://youtube.com/')
+LINKEDIN = config('LINKEDIN', default='https://linkedin.com')
 INSTAGRAM = config('INSTAGRAM', default='https://www.instagram.com/rwooga.ent')
 TWITTER = config('TWITTER', default='https://x.com/PhedoKat')
 TIKTOK = config('TIKTOK', default='https://www.tiktok.com/@phedish')
 
 # Icon URLs
 YOUTUBE_ICON_URL = config('YOUTUBE_ICON_URL', default='')
+LINKEDIN_ICON_URL = config('LINKEDIN_ICON_URL', default='')
 INSTAGRAM_ICON_URL = config('INSTAGRAM_ICON_URL', default='')
 TWITTER_ICON_URL = config('TWITTER_ICON_URL', default='')
 TIKTOK_ICON_URL = config('TIKTOK_ICON_URL', default='')
