@@ -36,11 +36,7 @@ def send_email_custom(
     template: str,
     context: Dict[str, Any]
 ) -> bool:
-    """
-    Send a custom HTML email in a background thread.
-    Template rendering happens here (main thread),
-    actual SMTP sending happens in background.
-    """
+   
     try:
         # Render template in main thread (fast, no I/O)
         html_content = render_to_string(template, context)

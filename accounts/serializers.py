@@ -1,12 +1,14 @@
 from django.utils import timezone
 from django.contrib.auth import get_user_model
-from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
-from accounts.models import User, VerificationCode
+from accounts.models import User
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from utils.verify_tokens import verify_email_token, verify_password_reset_token
 
 User = get_user_model()
+
+
 class UserSerializer(serializers.ModelSerializer):    
     class Meta:
         model = User
@@ -84,33 +86,39 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 
 class VerifyEmailSerializer(serializers.Serializer):
+    """
+    Serializer for verifying email using signed URLs
+    Only needs the token - user ID is encoded in the signed token
+    """
+    token = serializers.CharField(required=True)
 
-    email = serializers.EmailField(required=True)
-    token = serializers.UUIDField(required=True)
-
+    def validate_token(self, value):
+        """Verify the signed token and extract user ID"""
+        success, user_id, error = verify_email_token(value)
+        
+        if not success:
+            raise serializers.ValidationError(error)
+        
+        # Verify user exists
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("User not found")
+        
+        # Check if already verified
+        if user.is_active:
+            raise serializers.ValidationError("Email already verified")
+        
+        return value
+    
     def validate(self, attrs):
-        email = attrs['email']
+        """Extract user from token for use in view"""
         token = attrs['token']
-
-        verification = VerificationCode.objects.filter(
-            email=email,
-            token=token,
-            label=VerificationCode.REGISTER,
-            is_used=False
-        ).first()
-
-        if not verification:
-            raise serializers.ValidationError(
-                "Invalid verification link."
-            )
-
-        if verification.is_expired:
-            raise serializers.ValidationError(
-                "Verification link has expired."
-            )
-
-        # Attach for use in the view
-        attrs['verification'] = verification
+        success, user_id, _ = verify_email_token(token)
+        
+        user = User.objects.get(id=user_id)
+        attrs['user'] = user
+        
         return attrs
 
 
@@ -153,9 +161,11 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 
 
 class PasswordResetConfirmSerializer(serializers.Serializer):  
-    
-    email = serializers.EmailField(required=True)
-    token = serializers.UUIDField(required=True) 
+    """
+    Serializer for confirming password reset using signed URLs
+    Only needs the token - user ID is encoded in the signed token
+    """
+    token = serializers.CharField(required=True)
     new_password = serializers.CharField(
         required=True,
         write_only=True,
@@ -163,20 +173,35 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     )
     new_password_confirm = serializers.CharField(required=True, write_only=True)
     
+    def validate_token(self, value):
+        """Verify the signed token and extract user ID"""
+        success, user_id, error = verify_password_reset_token(value)
+        
+        if not success:
+            raise serializers.ValidationError(error)
+        
+        # Verify user exists
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("User not found")
+        
+        return value
+    
     def validate(self, attrs):
         if attrs['new_password'] != attrs['new_password_confirm']:
             raise serializers.ValidationError(
                 {"new_password": "Password fields didn't match."}
             )
+        
+        # Extract user from token for use in view
+        token = attrs['token']
+        success, user_id, _ = verify_password_reset_token(token)
+        
+        user = User.objects.get(id=user_id)
+        attrs['user'] = user
+        
         return attrs
-
-
-class VerificationCodeSerializer(serializers.ModelSerializer):   
-    
-    class Meta:
-        model = VerificationCode
-        fields = ['id', 'token', 'label', 'email', 'created_on', 'is_valid']
-        read_only_fields = ['id', 'token', 'created_on', 'is_valid']
 
 
 class UserProfileSerializer(serializers.ModelSerializer):  

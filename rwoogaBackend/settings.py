@@ -10,16 +10,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv()
 
-
-
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-
-# DEBUG = True 
-
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = [
@@ -38,7 +33,7 @@ INSTALLED_APPS = [
     'django_extensions',
     'django_filters',
     'drf_spectacular',   
-    'accounts',
+    'accounts.apps.AccountsConfig',
     'orders',
     'pricing',
     'products',
@@ -168,17 +163,22 @@ CORS_ALLOWED_ORIGINS = [
     "https://www.rwooga.com",
     "https://rwooga-project.vercel.app/",
 ]
-CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://rwooga-project.vercel.app",
+    "https://rwooga-frontend.vercel.app",
+    "http://localhost:3000",    
+    "https://modern-noemi-rwooga3dservices-e96463f8.koyeb.app",  
+]
+# Site Configuration
+SITE_URL = config('SITE_URL', default='http://localhost:3000')
+COMPANY_NAME = config('COMPANY_NAME', default='Rwooga')
+SUPPORT_EMAIL = config('SUPPORT_EMAIL', default='support@rwooga.com')
+EMAIL_VERIFICATION_EXPIRY_MINUTES = config('EMAIL_VERIFICATION_EXPIRY_MINUTES', default=30, cast=int)  
+PASSWORD_RESET_EXPIRY_MINUTES = config('PASSWORD_RESET_EXPIRY_MINUTES', default=30, cast=int)  
 
 
-
-SITE_URL =  "https://rwooga-project.vercel.app/"   
-COMPANY_NAME = "Rwooga"                 
-SUPPORT_EMAIL = "support@rwooga.com"
-VERIFICATION_CODE_EXPIRY_MINUTES = 10 
-
-
-
+# Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
