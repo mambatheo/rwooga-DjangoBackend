@@ -88,11 +88,11 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('NAME', default='postgres'),
-            'USER': config('USER', default='postgres'),
-            'PASSWORD': config('PASSWORD'),
-            'HOST': config('HOST', default='localhost'),
-            'PORT': config('PORT', cast=int, default=5432),
+            'NAME': config('DB_NAME'),
+            'USER': config('DB_USER'),
+            'PASSWORD': config('DB_PASSWORD'),
+            'HOST': config('DB_HOST', default='localhost'),
+            'PORT': config('DB_PORT', cast=int, default=5432),
             'OPTIONS': {
                 'sslmode': 'require',  
             },
@@ -130,17 +130,38 @@ STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Email context variables
+COMPANY_LOGO_URL = config('COMPANY_LOGO_URL', default='')
+YOUTUBE = config('YOUTUBE', default='https://youtube.com/')
+INSTAGRAM = config('INSTAGRAM', default='https://www.instagram.com/rwooga.ent')
+TWITTER = config('TWITTER', default='https://x.com/PhedoKat')
+TIKTOK = config('TIKTOK', default='https://www.tiktok.com/@phedish')
+
+# Icon URLs
+YOUTUBE_ICON_URL = config('YOUTUBE_ICON_URL', default='')
+INSTAGRAM_ICON_URL = config('INSTAGRAM_ICON_URL', default='')
+TWITTER_ICON_URL = config('TWITTER_ICON_URL', default='')
+TIKTOK_ICON_URL = config('TIKTOK_ICON_URL', default='')
+
+STORAGES = {   
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# CORS Configuration
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://rwooga-project.vercel.app",
-    "https://rwooga-frontend.vercel.app",
-    "https://modern-noemi-rwooga3dservices-e96463f8.koyeb.app",  
+    "https://www.rwooga.com",
+    "https://rwooga-project.vercel.app/",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -166,21 +187,39 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
 
-# Social Media
-YOUTUBE = config('YOUTUBE', default='https://www.youtube.com')
-INSTAGRAM = config('INSTAGRAM', default='https://www.instagram.com')
-LINKEDIN = config('LINKEDIN',default='https://www.linkedin.com')
-TWITTER = config('TWITTER', default='https://www.x.com')
-TIKTOK = config('TIKTOK', default='https://www.tiktok.com')
-COMPANY_URL=config('COMPANY_URL', default='')
+# Site Configuration
+SITE_URL = config('SITE_URL', default='http://localhost:3000')
+COMPANY_NAME = config('COMPANY_NAME', default='Rwooga')
+SUPPORT_EMAIL = config('SUPPORT_EMAIL', default='support@rwooga.com')
+VERIFICATION_CODE_EXPIRY_MINUTES = config('VERIFICATION_CODE_EXPIRY_MINUTES', default=10, cast=int)
 
-# Logo and Icons
-COMPANY_LOGO_URL = config('COMPANY_LOGO_URL', default='')
-YOUTUBE_ICON_URL = config('YOUTUBE_ICON_URL', default='')
-INSTAGRAM_ICON_URL = config('INSTAGRAM_ICON_URL', default='')
-LINKEDIN_ICON_URL = config('LINKEDIN_ICON_URL', default='')
-TWITTER_ICON_URL = config('TWITTER_ICON_URL', default='')
-TIKTOK_ICON_URL = config('TIKTOK_ICON_URL', default='')
+# Security Settings
+MAX_LOGIN_ATTEMPTS = config('MAX_LOGIN_ATTEMPTS', default=5, cast=int)
+ACCOUNT_LOCKOUT_MINUTES = config('ACCOUNT_LOCKOUT_MINUTES', default=30, cast=int)
+VERIFICATION_RESEND_COOLDOWN_MINUTES = config('VERIFICATION_RESEND_COOLDOWN_MINUTES', default=2, cast=int)
+
+# Session Settings
+SESSION_COOKIE_AGE = 86400  # 24 hours
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+# CSRF Settings
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+# Security Headers
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+# Production Security (only when DEBUG=False)
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 # REST Framework Configuration
 REST_FRAMEWORK = {

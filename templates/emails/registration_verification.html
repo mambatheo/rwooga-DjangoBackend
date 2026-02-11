@@ -10,18 +10,20 @@
         
         <!-- Logo Section -->
         <tr>
-            <td style="background-color: #0a0a0a; padding: 15px 30px 5px 5px; text-align: center;">
-                <a href="{{ company_url }}" style="display: inline-block; text-decoration: none;">
-                    <img src="{{ company_logo_url }}" alt="{{ company_name }} Logo" style="max-width: 180px; height: auto; display: block; margin: 0 auto;">
-                </a>
+            <td style="background: linear-gradient(135deg, #1a3a2e 0%, #2d5f4d 100%); padding: 30px; text-align: center; border-bottom: 4px solid #00d4ff;">
+                {% if company_logo_url %}
+                    <img src="{{ company_logo_url }}" alt="{{ company_name }} Logo" style="max-width: 200px; height: auto; display: block; margin: 0 auto;">
+                {% else %}
+                    <h1 style="color: #00d4ff; font-size: 48px; margin: 0; font-family: 'Poppins', sans-serif; font-weight: 700;">{{ company_name }}</h1>
+                {% endif %}
             </td>
         </tr>
         
         <!-- Header -->
         <tr>
-            <td style="background-color: #0a0a0a; padding: 5px 30px 35px 30px; text-align: center;">
-                <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #ffffff; margin-bottom: 10px;">Welcome!</h1>
-                <p style="margin: 0; font-size: 16px; color: #9ca3af;">You're just one step away from getting started</p>
+            <td style="background: linear-gradient(135deg, #1a3a2e 0%, #2d5f4d 100%); padding: 50px 30px; text-align: center;">
+                <h1 style="margin: 0; font-family: 'Poppins', sans-serif; font-size: 32px; font-weight: 700; color: #ffffff; margin-bottom: 10px; letter-spacing: -0.5px;">Welcome!</h1>
+                <p style="margin: 0; font-size: 16px; color: rgba(255, 255, 255, 0.9); font-weight: 400;">You're just one step away from getting started</p>
             </td>
         </tr>
         
@@ -47,8 +49,19 @@
                         </td>
                     </tr>
                     <tr>
-                        <td align="center" style="padding-top: 15px;">
-                            <p style="margin: 0; font-size: 13px; color: #9ca3af;">This link expires in {{ expiry_minutes }} minutes</p>
+                        <td align="center" style="padding-top: 18px;">
+                            <p style="margin: 0; font-size: 13px; color: #94a3b8; font-weight: 500;">This link expires in {{ expiry_minutes }} minutes</p>
+                        </td>
+                    </tr>
+                </table>
+                
+                <!-- Info Box -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); border-left: 4px solid #00d4ff; padding: 20px 25px; border-radius: 8px;">
+                            <p style="margin: 0; color: #1a3a2e; font-size: 14px; line-height: 1.7;">
+                                <strong style="color: #00a3cc; font-weight: 600;">ℹ️ One-click verification:</strong> Simply click the button above to instantly activate your account. No code needed!
+                            </p>
                         </td>
                     </tr>
                 </table>
@@ -68,10 +81,10 @@
                 <!-- Security Notice -->
                 <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
                     <tr>
-                        <td style="background-color: #1a1a1a; border-left: 3px solid #1F7A61; padding: 18px; border-radius: 4px;">
-                            <p style="margin: 0 0 5px 0; color: #ffffff; font-size: 14px; font-weight: 600;"> Security Notice</p>
-                            <p style="margin: 0; color: #9ca3af; font-size: 13px; line-height: 1.6;">
-                                If you didn't create an account, please ignore this email. Your email will not be registered.
+                        <td style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-left: 4px solid #ff9500; padding: 20px 25px; border-radius: 8px;">
+                            <p style="margin: 0 0 8px 0; color: #92400e; font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 600;">Security Notice</p>
+                            <p style="margin: 0; color: #b45309; font-size: 14px; line-height: 1.7;">
+                                If you didn't create an account with us, please ignore this email. The verification link will expire automatically and your email will not be registered.
                             </p>
                         </td>
                     </tr>
@@ -80,7 +93,7 @@
                 <!-- Signature -->
                 <p style="margin: 30px 0 0 0; font-size: 14px; color: #ffffff;">
                     Best regards,<br>
-                    <strong style="color: #1F7A61;">{{ company_name }} Team</strong>
+                    <strong style="color: #00d4ff; font-family: 'Poppins', sans-serif; font-weight: 600;">{{ company_name }} Team</strong>
                 </p>
             </td>
         </tr>
@@ -94,21 +107,29 @@
                 <table width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 20px 0;">
                     <tr>
                         <td align="center">
-                            <a href="{{ instagram }}" style="display: inline-block; margin: 0 8px;">
-                                <img src="{{ instagram_icon_url }}" alt="Instagram" style="width: 25px; height: 25px; display: block;">
+                            {% if social_instagram and instagram_icon_url %}
+                            <a href="{{ social_instagram }}" style="display: inline-block; margin: 0 12px;">
+                                <img src="{{ instagram_icon_url }}" alt="Instagram" style="width: 26px; height: 26px; opacity: 0.85;">
                             </a>
-                            <a href="{{ linkedin }}" style="display: inline-block; margin: 0 8px;">
-                                <img src="{{ linkedin_icon_url }}" alt="LinkedIn" style="width: 25px; height: 25px; display: block;">
+                            {% endif %}
+                            
+                            {% if social_twitter and twitter_icon_url %}
+                            <a href="{{ social_twitter }}" style="display: inline-block; margin: 0 12px;">
+                                <img src="{{ twitter_icon_url }}" alt="Twitter" style="width: 26px; height: 26px; opacity: 0.85;">
                             </a>
-                            <a href="{{ twitter }}" style="display: inline-block; margin: 0 8px;">
-                                <img src="{{ twitter_icon_url }}" alt="Twitter" style="width: 25px; height: 25px; display: block;">
+                            {% endif %}
+                            
+                            {% if social_youtube and youtube_icon_url %}
+                            <a href="{{ social_youtube }}" style="display: inline-block; margin: 0 12px;">
+                                <img src="{{ youtube_icon_url }}" alt="YouTube" style="width: 26px; height: 26px; opacity: 0.85;">
                             </a>
-                            <a href="{{ tiktok }}" style="display: inline-block; margin: 0 8px;">
-                                <img src="{{ tiktok_icon_url }}" alt="TikTok" style="width: 25px; height: 25px; display: block;">
+                            {% endif %}
+                            
+                            {% if social_tiktok and tiktok_icon_url %}
+                            <a href="{{ social_tiktok }}" style="display: inline-block; margin: 0 12px;">
+                                <img src="{{ tiktok_icon_url }}" alt="TikTok" style="width: 26px; height: 26px; opacity: 0.85;">
                             </a>
-                            <a href="{{ youtube }}" style="display: inline-block; margin: 0 8px;">
-                                <img src="{{ youtube_icon_url }}" alt="YouTube" style="width: 25px; height: 25px; display: block;">
-                            </a>
+                            {% endif %}
                         </td>
                     </tr>
                 </table>
