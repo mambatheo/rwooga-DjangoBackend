@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 def send_password_reset_verification(user):
     """Send 6-digit verification code to user's email for password reset"""
-    from accounts.models import VerificationCode  # Import here to avoid circular import
+    from accounts.models import VerificationCode  
     
     # Generate 6-digit code
     code = VerificationCode.generate_code()
@@ -17,7 +17,7 @@ def send_password_reset_verification(user):
         user=user,
         label=VerificationCode.RESET_PASSWORD,
         is_verified=False
-    ).update(is_verified=True)  # Mark old codes as used
+    ).update(is_verified=True)  
     
     # Create new verification code record
     VerificationCode.objects.create(
