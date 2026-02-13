@@ -1,9 +1,9 @@
-from rest_framework import viewsets, permissions, status, filters
+from rest_framework import viewsets, permissions, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Avg
-from .models import ServiceCategory, Product, ProductMedia, Feedback, CustomRequest, Wishlist, WishlistItem
+from .models import ServiceCategory, Product, ProductMedia, Feedback, CustomRequest, Wishlist, WishlistItem, Discount, ProductDiscount
 from .permissions import AnyoneCanCreateRequest, AnyoneCanCreateRequest, IsAdminOrStaffOrReadOnly, IsOwnerOnly, IsStaffOnly, CustomerCanCreateFeedback
 from .serializers import (
     CustomRequestSerializer,
@@ -15,13 +15,15 @@ from .serializers import (
     FeedbackSerializer,
     WishlistSerializer,
     WishlistItemSerializer,
+    DiscountSerializer,
+    ProductDiscountSerializer
 )
 
 
 class ServiceCategoryViewSet(viewsets.ModelViewSet):
     queryset = ServiceCategory.objects.all()
     serializer_class = ServiceCategorySerializer
-    permission_classes = [IsAdminOrStaffOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -29,7 +31,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         average_rating=Avg("feedbacks__rating")
     )
     serializer_class = ProductSerializer
-    permission_classes = [IsAdminOrStaffOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'short_description', 'detailed_description']
     ordering_fields = ['unit_price', 'created_at', 'name']
@@ -58,14 +60,14 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         return qs
 
-    @action(detail=True, methods=["post"], permission_classes=[IsStaffOnly])
+    @action(detail=True, methods=["post"])
     def publish(self, request, pk=None):
         product = self.get_object()
         product.published = True
         product.save()
         return Response({"status": "Product published"})
 
-    @action(detail=True, methods=["post"], permission_classes=[IsStaffOnly])
+    @action(detail=True, methods=["post"])
     def unpublish(self, request, pk=None):
         product = self.get_object()
         product.published = False
@@ -73,12 +75,10 @@ class ProductViewSet(viewsets.ModelViewSet):
         return Response({"status": "Product unpublished"})
     
   
-
-
 class ProductMediaViewSet(viewsets.ModelViewSet):
     queryset = ProductMedia.objects.all()
     serializer_class = ProductMediaSerializer
-    permission_classes = [IsAdminOrStaffOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     
     def get_queryset(self):
         qs = super().get_queryset()
@@ -220,3 +220,22 @@ class WishlistItemViewSet(viewsets.ModelViewSet):
                 "message": f"Removed {count} items from wishlist"
             })
         return Response({"message": "Wishlist is already empty"})
+
+
+class DiscountViewSet(viewsets.ModelViewSet):
+    queryset = Discount.objects.all()
+    serializer_class = DiscountSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+
+class ProductDiscountViewSet(viewsets.ModelViewSet):
+    queryset = ProductDiscount.objects.all()
+    serializer_class = ProductDiscountSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        product_id = self.request.query_params.get('product')
+        if product_id:
+            qs = qs.filter(product_id=product_id)
+        return qs

@@ -36,7 +36,6 @@ INSTALLED_APPS = [
     'drf_spectacular',   
     'accounts.apps.AccountsConfig',
     'orders',
-    'pricing',
     'products',
     'utils',
 ]
@@ -183,7 +182,6 @@ SITE_URL =  "https://rwooga-project.vercel.app"
 COMPANY_NAME = "Rwooga"                 
 SUPPORT_EMAIL = "support@rwooga.com"
 VERIFICATION_CODE_EXPIRY_MINUTES = 10 
-
 
 # Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

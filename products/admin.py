@@ -1,10 +1,11 @@
 from django.contrib import admin
-from .models import ServiceCategory, Product, ProductMedia, Feedback, CustomRequest, Wishlist, WishlistItem
+from .models import ServiceCategory, Product, ProductMedia, Feedback, CustomRequest, Wishlist, WishlistItem, Discount, ProductDiscount
 
 
 class ProductMediaInline(admin.TabularInline):
     model = ProductMedia
     extra = 1
+
 
 class FeedbackInline(admin.TabularInline):
     model = Feedback
@@ -14,7 +15,7 @@ class FeedbackInline(admin.TabularInline):
 
 @admin.register(ServiceCategory)
 class ServiceCategoryAdmin(admin.ModelAdmin):
-    list_display = ['id','name', 'slug', 'is_active', 'created_at']
+    list_display = ['id', 'name', 'is_active', 'created_at']  # Removed duplicate 'id'
     list_filter = ['is_active']
     search_fields = ['name']
     prepopulated_fields = {'slug': ('name',)}
@@ -22,25 +23,24 @@ class ServiceCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['id','name', 'category', 'unit_price', 'published', 'created_at']
+    list_display = ['id', 'name', 'category', 'unit_price', 'published', 'created_at']
     list_filter = ['published', 'category', 'created_at']
     search_fields = ['name', 'short_description']
-    readonly_fields = ['created_at', 'updated_at']
+    readonly_fields = ['slug', 'created_at', 'updated_at']  # Removed 'product_volume'
     inlines = [ProductMediaInline, FeedbackInline]
-    prepopulated_fields = {'slug': ('name',)}
     
     fieldsets = (
         ('Basic Info', {
-            'fields': ('name', 'slug', 'category', 'short_description', 'detailed_description')
+            'fields': ('name', 'category', 'short_description', 'detailed_description')
         }),
         ('Pricing', {
             'fields': ('unit_price', 'currency')
         }),
         ('Dimensions', {
-            'fields': ('length', 'width', 'height', 'measurement_unit')
+            'fields': ('length', 'width', 'height', 'measurement_unit', 'material')  # Removed 'product_volume'
         }),
         ('Product Variations', {
-            'fields': ('available_sizes', 'available_colors', 'available_materials'),
+            'fields': ('available_sizes', 'available_colors', 'available_materials'),  # Removed duplicate
             'description': 'Enter comma-separated values (e.g., Small, Medium, Large)'
         }),
         ('Publishing', {
@@ -51,13 +51,11 @@ class ProductAdmin(admin.ModelAdmin):
         }),
     )
 
-
 @admin.register(ProductMedia)
 class ProductMediaAdmin(admin.ModelAdmin):
     list_display = ['product', 'display_order', 'uploaded_at']
     list_filter = ['uploaded_at']
     search_fields = ['product__name', 'alt_text']
-
 
 @admin.register(Feedback)
 class FeedbackAdmin(admin.ModelAdmin):
@@ -136,3 +134,32 @@ class WishlistItemAdmin(admin.ModelAdmin):
     list_filter = ['created_at']
     search_fields = ['wishlist__user__full_name', 'product__name']
     readonly_fields = ['created_at']
+
+
+@admin.register(Discount)
+class DiscountAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "name",
+        "discount_type",
+        "discount_value",
+        "is_active",
+        "start_date",
+        "end_date",
+    )
+    list_filter = ("discount_type", "is_active")
+    search_fields = ("name",)
+    date_hierarchy = "start_date"
+
+
+@admin.register(ProductDiscount)
+class ProductDiscountAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "product",
+        "discount",
+        "is_valid",
+        "created_at",
+    )
+    list_filter = ("is_valid",)
+    search_fields = ("product__name", "discount__name")

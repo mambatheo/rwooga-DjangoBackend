@@ -1,10 +1,13 @@
 import uuid
 from django.db import models
+from django.utils import timezone
+from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.conf import settings
 from django.utils.text import slugify
 from django.core.validators import FileExtensionValidator
+
 
 class ServiceCategory(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -68,49 +71,47 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # NEW: Product variations (simple text fields)
-    available_sizes = models.CharField(max_length=200, blank=True, help_text="e.g., Small, Medium, Large")
-    available_colors = models.CharField(max_length=200, blank=True, help_text="e.g., Red, Blue, Green")
-    available_materials = models.CharField(max_length=200, blank=True, help_text="e.g., PLA, ABS, Resin")
+    available_sizes = models.CharField(max_length=200, blank=True)
+    available_colors = models.CharField(max_length=200, blank=True)
+    available_colors = models.CharField(max_length=200, blank=True)
+    available_materials = models.CharField(max_length=200, blank=True)
     
-    class Meta:
-        verbose_name = "Product"
-        verbose_name_plural = "Products"
-
     @property
     def product_volume(self):
-        if self.length and self.width and self.height:
+        if self.length or self.width or self.height :
             return self.length * self.width * self.height
-        return None
+        else :
+            return 0
 
-    def clean(self):
-        from django.core.exceptions import ValidationError
-        errors = {}
-
-        if self.category:
-            # Check if dimensions are required
-            if self.category.requires_dimensions:
-                if not self.length:
-                    errors['length'] = 'Length is required for this service category.'
-                if not self.width:
-                    errors['width'] = 'Width is required for this service category.'
-                if not self.height:
-                    errors['height'] = 'Height is required for this service category.'
-        
-            # Check if material is required
-            if self.category.requires_material and not self.material:
-                errors['material'] = 'Material is required for this service category.'
-        
-            # Check pricing based on category pricing type
-            if self.category.pricing_type == 'fixed' and not self.unit_price:
-                errors['unit_price'] = 'Price is required for fixed-price services.'
-        if errors:
-            raise ValidationError(errors)
-    
     def save(self, *args, **kwargs):
+        # Auto-generate unique slug
         if not self.slug:
-            self.slug = slugify(self.name)
+            base_slug = slugify(self.name) or str(uuid.uuid4())[:8]
+            slug = base_slug
+            counter = 1
+            while Product.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+
+        # Auto-calculate volume
+        if self.length and self.width and self.height:
+            self.product_volume = self.length * self.width * self.height
+
         super().save(*args, **kwargs)
+
+    def get_final_price(self):
+        price = self.unit_price
+
+        for pd in self.product_discounts.select_related("discount"):
+            discount = pd.discount
+            if pd.is_valid and discount.is_valid():
+                if discount.discount_type == Discount.PERCENTAGE:
+                    price -= price * (discount.discount_value / Decimal("100"))
+                elif discount.discount_type == Discount.FIXED:
+                    price -= discount.discount_value
+
+        return max(price, Decimal("0.00"))
 
     def __str__(self):
         return self.name
@@ -119,58 +120,123 @@ class Product(models.Model):
 def validate_image_size(file):
     limit_mb = 110
     if file.size > limit_mb * 1024 * 1024:
-        raise ValidationError(f'Max file size is {limit_mb}MB')
+        raise ValidationError(f"Max file size is {limit_mb}MB")
+
 
 def validate_video_size(file):
     limit_mb = 500
     if file.size > limit_mb * 1024 * 1024:
-        raise ValidationError(f'Max file size is {limit_mb}MB')
+        raise ValidationError(f"Max file size is {limit_mb}MB")
+
 
 class ProductMedia(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    product = models.ForeignKey(Product, related_name="media", on_delete=models.CASCADE)
-    
-    model_3d = models.FileField(upload_to="products/models/", blank=True, null=True)
-    alt_text = models.CharField(max_length=200, blank=True)
-    display_order = models.PositiveIntegerField(default=0)
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-    video_url = models.URLField(max_length=200, blank=True)
+    product = models.ForeignKey(
+        Product,
+        related_name="media",
+        on_delete=models.CASCADE
+    )
 
+    model_3d = models.FileField(upload_to="products/models/", blank=True, null=True)
     image = models.ImageField(
-        upload_to="products/images/", 
-        blank=True, 
+        upload_to="products/images/",
+        blank=True,
         null=True,
         validators=[validate_image_size]
     )
     video_file = models.FileField(
-        upload_to="products/videos/", 
-        blank=True, 
+        upload_to="products/videos/",
+        blank=True,
         null=True,
         validators=[validate_video_size]
     )
+    video_url = models.URLField(blank=True)
+
+    alt_text = models.CharField(max_length=200, blank=True)
+    display_order = models.PositiveIntegerField(default=0)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['display_order']
+        ordering = ["display_order"]
         verbose_name = "Product Media"
         verbose_name_plural = "Product Media"
-    
+
     def clean(self):
         if not any([self.image, self.video_file, self.video_url, self.model_3d]):
             raise ValidationError('At least one media file (image, video, or 3D model) must be provided.')
+    def __str__(self):
+        return f"Media for {self.product.name}"
 
     def __str__(self):
         return f"{self.product.name} - Media {self.display_order}"
 
 class Feedback(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    product = models.ForeignKey(Product, related_name="feedbacks", on_delete=models.CASCADE)
+    product = models.ForeignKey(
+        Product,
+        related_name="feedbacks",
+        on_delete=models.CASCADE
+    )
     client_name = models.CharField(max_length=200)
     message = models.TextField()
-    rating = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    rating = models.PositiveIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
     published = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="feedbacks")
 
+    def __str__(self):
+        return f"{self.client_name} - {self.product.name}"
+
+
+class Discount(models.Model):
+    PERCENTAGE = "percentage"
+    FIXED = "fixed"
+
+    DISCOUNT_TYPE_CHOICES = [
+        (PERCENTAGE, "Percentage"),
+        (FIXED, "Fixed amount"),
+    ]
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100)
+    discount_type = models.CharField(max_length=20, choices=DISCOUNT_TYPE_CHOICES)
+    discount_value = models.DecimalField(max_digits=10, decimal_places=2)
+
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    is_active = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def is_valid(self):
+        now = timezone.now()
+        return self.is_active and self.start_date <= now <= self.end_date
+
+    def __str__(self):
+        return self.name
+
+
+class ProductDiscount(models.Model):
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="product_discounts"
+    )
+    discount = models.ForeignKey(
+        Discount,
+        on_delete=models.CASCADE,
+        related_name="product_discounts"
+    )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    is_valid = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("product", "discount")
+
+    def __str__(self):
+        return f"{self.product.name} - {self.discount.name}"
     class Meta:
         ordering = ['-created_at']
         verbose_name = "Feedback"
@@ -237,7 +303,8 @@ class Wishlist(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="wishlisted_by")
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="wishlists")
     created_at = models.DateTimeField(auto_now_add=True)
-
+    updated_at = models.DateTimeField(auto_now=True)
+    
     class Meta:
         unique_together = ['user', 'product']  
         ordering = ['-created_at']

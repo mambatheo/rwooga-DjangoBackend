@@ -1,3 +1,4 @@
+from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     ServiceCategoryViewSet,
@@ -7,6 +8,8 @@ from .views import (
     CustomRequestViewSet,
     WishlistItemViewSet,
     WishlistViewSet,
+    DiscountViewSet,
+    ProductDiscountViewSet
 )
 
 router = DefaultRouter()
@@ -17,5 +20,9 @@ router.register('feedback', FeedbackViewSet)
 router.register('custom-requests', CustomRequestViewSet)
 router.register('wishlist', WishlistViewSet, basename='wishlist')
 router.register('wishlist-items', WishlistItemViewSet, basename='wishlist-item')
+router.register('discounts', DiscountViewSet)
+router.register('product-discounts', ProductDiscountViewSet)
 
-urlpatterns = router.urls
+urlpatterns = [
+    path('', include(router.urls)),  
+]
