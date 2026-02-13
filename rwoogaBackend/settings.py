@@ -44,7 +44,6 @@ INSTALLED_APPS = [
     'drf_spectacular',   
     'accounts',
     'orders',
-    'pricing',
     'products',
     'utils',
 ]
@@ -156,12 +155,11 @@ SUPPORT_EMAIL = "support@rwooga.com"
 VERIFICATION_CODE_EXPIRY_MINUTES = 10 
 
 
-
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "mutheogene61@gmail.com"
+EMAIL_HOST_USER = config("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
 
 
