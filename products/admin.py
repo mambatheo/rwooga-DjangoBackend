@@ -37,10 +37,10 @@ class ProductAdmin(admin.ModelAdmin):
             'fields': ('unit_price', 'currency')
         }),
         ('Dimensions', {
-            'fields': ('length', 'width', 'height', 'measurement_unit', 'material')
+            'fields': ('length', 'width', 'height', 'measurement_unit')
         }),
         ('Product Variations', {
-            'fields': ('available_sizes', 'available_colors'),
+            'fields': ('available_sizes', 'available_colors', 'available_materials'),
             'description': 'Enter comma-separated values (e.g., Small, Medium, Large)'
         }),
         ('Publishing', {
@@ -73,6 +73,7 @@ class FeedbackAdmin(admin.ModelAdmin):
     def make_unpublished(self, request, queryset):
         queryset.update(published=False)
     make_unpublished.short_description = "Unpublish selected feedback"
+
 
 @admin.register(CustomRequest)
 class CustomRequestAdmin(admin.ModelAdmin):
@@ -110,22 +111,25 @@ class CustomRequestAdmin(admin.ModelAdmin):
         queryset.update(status='CANCELLED')
     mark_cancelled.short_description = "Mark as Cancelled"
 
+
 class WishlistItemInline(admin.TabularInline):
     model = WishlistItem
     extra = 0
     readonly_fields = ['product', 'created_at']
 
+
 @admin.register(Wishlist)
 class WishlistAdmin(admin.ModelAdmin):
-    list_display = ['user', 'item_count', 'created_at', 'updated_at']
+    list_display = ['user', 'get_item_count', 'created_at']
     search_fields = ['user__full_name', 'user__email']
-    readonly_fields = ['created_at', 'updated_at']
+    readonly_fields = ['created_at']
     inlines = [WishlistItemInline]
     
-    def item_count(self, obj):
-        return obj.items.count()
-    
-    item_count.short_description = 'Items'  
+    def get_item_count(self, obj):
+        return obj.item_count
+    get_item_count.short_description = 'Items'
+
+
 @admin.register(WishlistItem)
 class WishlistItemAdmin(admin.ModelAdmin):
     list_display = ['wishlist', 'product', 'created_at']

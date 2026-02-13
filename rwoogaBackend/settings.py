@@ -95,8 +95,8 @@ else:
             'HOST': config('HOST', default='localhost'),
             'PORT': config('PORT', cast=int, default=5432),
             'OPTIONS': {
-                'sslmode': 'require',  
-            },
+                 'sslmode': 'require',  
+             },
             'CONN_MAX_AGE': 600,  
         }
     }
