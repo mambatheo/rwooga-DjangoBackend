@@ -27,22 +27,29 @@ def send_password_reset_verification(user):
         label=VerificationCode.RESET_PASSWORD
     )
     
-    # Prepare email context
     context = {
         "full_name": user.full_name,
-        "reset_code": code,
+        "reset_code": code, 
         "company_name": settings.COMPANY_NAME,
         "company_logo_url": settings.COMPANY_LOGO_URL,
+        "company_url": settings.COMPANY_URL,  
+        
+        # Social media links 
         "youtube": settings.YOUTUBE,
         "instagram": settings.INSTAGRAM,
         "twitter": settings.TWITTER,
         "tiktok": settings.TIKTOK,
+        "linkedin": settings.LINKEDIN,  
+        
+        # Social media icon URLs
         "youtube_icon_url": settings.YOUTUBE_ICON_URL,
         "instagram_icon_url": settings.INSTAGRAM_ICON_URL,
         "twitter_icon_url": settings.TWITTER_ICON_URL,
         "tiktok_icon_url": settings.TIKTOK_ICON_URL,
+        "linkedin_icon_url": settings.LINKEDIN_ICON_URL,  
+        
         "support_email": settings.SUPPORT_EMAIL,
-        "expiry_minutes": getattr(settings, 'VERIFICATION_CODE_EXPIRY_MINUTES', 10),
+        "expiry_minutes": settings.VERIFICATION_CODE_EXPIRY_MINUTES,  
     }
 
     send_email_custom(
@@ -54,4 +61,3 @@ def send_password_reset_verification(user):
     
     logger.info(f"Password reset code sent to {user.email}")
     return code
-
