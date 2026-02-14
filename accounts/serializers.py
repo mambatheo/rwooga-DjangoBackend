@@ -4,7 +4,6 @@ from django.contrib.auth.password_validation import validate_password
 from accounts.models import User
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from utils.verify_tokens import verify_email_token, verify_password_reset_token
 
 User = get_user_model()
 
@@ -87,37 +86,51 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 class VerifyEmailSerializer(serializers.Serializer):
     """
-    Serializer for verifying email using signed URLs
-    Only needs the token - user ID is encoded in the signed token
+    Serializer for verifying email using 6-digit code
+    Requires both email and code for verification
     """
-    token = serializers.CharField(required=True)
+    email = serializers.EmailField(required=True)
+    code = serializers.CharField(required=True, min_length=6, max_length=6)
 
-    def validate_token(self, value):
-        """Verify the signed token and extract user ID"""
-        success, user_id, error = verify_email_token(value)
+    def validate_code(self, value):
+        """Validate that code is 6 digits"""
+        if not value.isdigit():
+            raise serializers.ValidationError("Code must be 6 digits")
+        if len(value) != 6:
+            raise serializers.ValidationError("Code must be exactly 6 digits")
+        return value
+
+    def validate(self, attrs):
+        """Verify the code and extract user"""
+        from accounts.models import VerificationCode  # Import here to avoid circular import
         
-        if not success:
-            raise serializers.ValidationError(error)
+        email = attrs['email']
+        code = attrs['code']
         
-        # Verify user exists
+        # Find verification code
         try:
-            user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            raise serializers.ValidationError("User not found")
+            verification = VerificationCode.objects.get(
+                email=email,
+                code=code,
+                label=VerificationCode.REGISTER,
+                is_verified=False
+            )
+        except VerificationCode.DoesNotExist:
+            raise serializers.ValidationError("Invalid verification code or email")
+        
+        # Check if expired
+        if verification.is_expired:
+            raise serializers.ValidationError("Verification code has expired")
+        
+       # Get user
+        user = verification.user
         
         # Check if already verified
         if user.is_active:
             raise serializers.ValidationError("Email already verified")
         
-        return value
-    
-    def validate(self, attrs):
-        """Extract user from token for use in view"""
-        token = attrs['token']
-        success, user_id, _ = verify_email_token(token)
-        
-        user = User.objects.get(id=user_id)
         attrs['user'] = user
+        attrs['verification'] = verification
         
         return attrs
 
@@ -160,12 +173,13 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         return value
 
 
-class PasswordResetConfirmSerializer(serializers.Serializer):  
+class PasswordResetConfirmSerializer(serializers.Serializer):
     """
-    Serializer for confirming password reset using signed URLs
-    Only needs the token - user ID is encoded in the signed token
+    Serializer for confirming password reset using 6-digit code
+    Requires email, code, and new password
     """
-    token = serializers.CharField(required=True)
+    email = serializers.EmailField(required=True)
+    code = serializers.CharField(required=True, min_length=6, max_length=6)
     new_password = serializers.CharField(
         required=True,
         write_only=True,
@@ -173,33 +187,46 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     )
     new_password_confirm = serializers.CharField(required=True, write_only=True)
     
-    def validate_token(self, value):
-        """Verify the signed token and extract user ID"""
-        success, user_id, error = verify_password_reset_token(value)
-        
-        if not success:
-            raise serializers.ValidationError(error)
-        
-        # Verify user exists
-        try:
-            user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            raise serializers.ValidationError("User not found")
-        
+    def validate_code(self, value):
+        """Validate that code is 6 digits"""
+        if not value.isdigit():
+            raise serializers.ValidationError("Code must be 6 digits")
+        if len(value) != 6:
+            raise serializers.ValidationError("Code must be exactly 6 digits")
         return value
     
     def validate(self, attrs):
+        """Verify passwords match and code is valid"""
+        from accounts.models import VerificationCode  # Import here to avoid circular import
+        
         if attrs['new_password'] != attrs['new_password_confirm']:
             raise serializers.ValidationError(
                 {"new_password": "Password fields didn't match."}
             )
         
-        # Extract user from token for use in view
-        token = attrs['token']
-        success, user_id, _ = verify_password_reset_token(token)
+        email = attrs['email']
+        code = attrs['code']
         
-        user = User.objects.get(id=user_id)
+        # Find verification code
+        try:
+            verification = VerificationCode.objects.get(
+                email=email,
+                code=code,
+                label=VerificationCode.RESET_PASSWORD,
+                is_verified=False
+            )
+        except VerificationCode.DoesNotExist:
+            raise serializers.ValidationError("Invalid reset code or email")
+        
+        # Check if expired
+        if verification.is_expired:
+            raise serializers.ValidationError("Reset code has expired")
+        
+        # Get user
+        user = verification.user
+        
         attrs['user'] = user
+        attrs['verification'] = verification
         
         return attrs
 

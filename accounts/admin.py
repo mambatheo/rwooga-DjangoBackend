@@ -3,10 +3,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from .models import (
-    User,
-   
-)
+from .models import *
 
 
 @admin.register(User)
@@ -14,6 +11,7 @@ class UserAdmin(BaseUserAdmin):
 
     
     list_display = [
+        'id',
         'email',
         'get_full_name',
         'phone_number',
@@ -90,8 +88,49 @@ class UserAdmin(BaseUserAdmin):
        
         return obj.get_full_name()
     get_full_name.short_description = 'Full Name'
+    
+@admin.register(VerificationCode)  
+class VerificationCodeAdmin(admin.ModelAdmin):
+    list_display = [
+        'id',
+        'code',
+        'created_on',
+        'user',
+        'user_id'
+    ]
+    
+    readonly_fields = [
+        'id',        
+        'code',
+        'created_on',
+        'user'
+    ]
+    
+    ordering = [
+        'created_on',
+    ]
+    list_filter = [
+        'user',
+        'created_on'
+    ]
+    search_fields = [
+        'id',
+        'user'
+    ]
+    
+    fieldsets = (
+        (None, {
+            "fields": (
+                'id','code','created_on','user'
+            ),
+        }),
+    )
+    
 
-# Customize admin site headers
+
+
+
+#Customize admin site headers
 admin.site.site_header = "Rwooga Administration"
 admin.site.site_title = "Rwooga Admin Portal"
 admin.site.index_title = "Welcome to Rwooga Admin Portal"

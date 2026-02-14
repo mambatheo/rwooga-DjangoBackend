@@ -12,7 +12,8 @@ load_dotenv()
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY')
-DEBUG = config('DEBUG', default=False, cast=bool)
+#DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -30,13 +31,11 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',  
     'corsheaders',
-    'dj-database-url',
     'django_extensions',
     'django_filters',
     'drf_spectacular',   
     'accounts.apps.AccountsConfig',
     'orders',
-    'pricing',
     'products',
     'utils',
 ]
@@ -74,7 +73,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'rwoogaBackend.wsgi.application'
 
-# Database Configuration - Optimized for Koyeb + Supabase
+# Database Configuration for production
 if config('DATABASE_URL', default=None):
     DATABASES = {
         'default': dj_database_url.config(
@@ -95,8 +94,8 @@ else:
             'HOST': config('HOST', default='localhost'),
             'PORT': config('PORT', cast=int, default=5432),
             'OPTIONS': {
-                'sslmode': 'require',  
-            },
+                 'sslmode': 'require',  
+             },
             'CONN_MAX_AGE': 600,  
         }
     }
@@ -132,9 +131,11 @@ MEDIA_URL = '/media/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
 
 # Email context variables
+COMPANY_URL = config('COMPANY_URL', default='')
 COMPANY_LOGO_URL = config('COMPANY_LOGO_URL', default='')
 YOUTUBE = config('YOUTUBE', default='https://youtube.com/')
 LINKEDIN = config('LINKEDIN', default='https://linkedin.com')
@@ -151,7 +152,7 @@ TIKTOK_ICON_URL = config('TIKTOK_ICON_URL', default='')
 
 STORAGES = {   
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
 
@@ -164,29 +165,30 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "https://rwooga-project.vercel.app",
     "https://www.rwooga.com",
+    "https://modern-noemi-rwooga3dservices-e96463f8.koyeb.app",
     
 ]
 CORS_ALLOW_CREDENTIALS = True
 
-
-
-SITE_URL =  "https://rwooga-project.vercel.app"   
-COMPANY_NAME = "Rwooga"                 
-SUPPORT_EMAIL = "support@rwooga.com"
-VERIFICATION_CODE_EXPIRY_MINUTES = 10 
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://rwooga-project.vercel.app",
+    "https://www.rwooga.com",
+    "https://modern-noemi-rwooga3dservices-e96463f8.koyeb.app",
+]
 
 
 # Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
-
 # Site Configuration
-SITE_URL = config('SITE_URL', default='http://localhost:3000')
+
 COMPANY_NAME = config('COMPANY_NAME', default='Rwooga')
 SUPPORT_EMAIL = config('SUPPORT_EMAIL', default='support@rwooga.com')
 VERIFICATION_CODE_EXPIRY_MINUTES = config('VERIFICATION_CODE_EXPIRY_MINUTES', default=10, cast=int)
@@ -235,6 +237,7 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
+
 # Logging Configuration
 LOGGING = {
     'version': 1,
@@ -253,13 +256,18 @@ LOGGING = {
         },
     },
     'loggers': {
-
-        'root': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'accounts': {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': False,
         },
     },
 }
+
 
 

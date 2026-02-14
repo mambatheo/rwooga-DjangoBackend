@@ -20,7 +20,7 @@ from accounts.serializers import (
 )
 from accounts.permissions import IsAdmin, IsOwnerOrAdmin
 from utils.registration_verification import send_registration_verification
-from utils.send_password_reset_verification import send_password_reset_verification
+from utils.password_reset_verification import send_password_reset_verification
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -82,7 +82,7 @@ class AuthViewSet(viewsets.GenericViewSet):
 
     @action(detail=False, methods=["post"])
     def register(self, request):
-        """Register a new user and send verification email with signed URL"""
+        """Register a new user and send verification code via email"""
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
@@ -90,7 +90,7 @@ class AuthViewSet(viewsets.GenericViewSet):
                 send_registration_verification(user)
                 return Response(
                     {
-                        "message": "Registration successful. Verification link sent to email.",
+                        "message": "Registration successful. Verification code sent to email.",
                         "email": user.email,
                     },
                     status=status.HTTP_201_CREATED,
@@ -110,17 +110,21 @@ class AuthViewSet(viewsets.GenericViewSet):
     @action(detail=False, methods=["post"])
     def verify_email(self, request):
         """
-        Verify user's email using signed URL token
-        No database lookup needed - token contains signed user ID
+        Verify user's email using 6-digit code
         """
         serializer = VerifyEmailSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user = serializer.validated_data["user"]
+        verification = serializer.validated_data["verification"]
 
         # Activate user
         user.is_active = True
         user.save(update_fields=["is_active"])
+        
+        # Mark verification code as used
+        verification.is_verified = True
+        verification.save(update_fields=["is_verified"])
 
         # Generate JWT tokens
         refresh = RefreshToken.for_user(user)
@@ -141,7 +145,7 @@ class AuthViewSet(viewsets.GenericViewSet):
 
     @action(detail=False, methods=["post"])
     def resend_verification(self, request):
-        """Resend verification link to user's email"""
+        """Resend verification code to user's email"""
         email = request.data.get("email")
         if not email:
             return Response(
@@ -159,7 +163,7 @@ class AuthViewSet(viewsets.GenericViewSet):
             
             send_registration_verification(user)
             return Response(
-                {"message": "A new verification link has been sent to your email."}, 
+                {"message": "A new verification code has been sent to your email."}, 
                 status=status.HTTP_200_OK
             )
         except User.DoesNotExist:
@@ -237,7 +241,7 @@ class AuthViewSet(viewsets.GenericViewSet):
 
     @action(detail=False, methods=["post"], permission_classes=[AllowAny])
     def password_reset_request(self, request):
-        """Send password reset link with signed URL to user's email"""
+        """Send password reset code to user's email"""
         serializer = PasswordResetRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -253,7 +257,7 @@ class AuthViewSet(viewsets.GenericViewSet):
         try:
             send_password_reset_verification(user)
             return Response(
-                {"message": "Password reset link sent to your email."}, 
+                {"message": "Password reset code sent to your email."}, 
                 status=status.HTTP_200_OK
             )
         except Exception as e:
@@ -266,17 +270,21 @@ class AuthViewSet(viewsets.GenericViewSet):
     @action(detail=False, methods=["post"])
     def password_reset_confirm(self, request):
         """
-        Confirm password reset using signed URL token and set new password
-        No database lookup needed - token contains signed user ID
+        Confirm password reset using 6-digit code and set new password
         """
         serializer = PasswordResetConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user = serializer.validated_data["user"]
+        verification = serializer.validated_data["verification"]
         
         # Set new password
         user.set_password(serializer.validated_data["new_password"])
         user.save(update_fields=["password"])
+        
+        # Mark reset code as used
+        verification.is_verified = True
+        verification.save(update_fields=["is_verified"])
 
         return Response(
             {"message": "Password has been reset successfully."}, 
