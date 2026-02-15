@@ -1,5 +1,5 @@
 import os
-from decouple import config
+from decouple import config, Csv
 from dotenv import load_dotenv
 from datetime import timedelta
 from pathlib import Path
@@ -160,23 +160,9 @@ STORAGES = {
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS Configuration
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://rwooga-project.vercel.app",
-    "https://www.rwooga.com",
-    "https://modern-noemi-rwooga3dservices-e96463f8.koyeb.app",
-    
-]
-CORS_ALLOW_CREDENTIALS = True
-
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://rwooga-project.vercel.app",
-    "https://www.rwooga.com",
-    "https://modern-noemi-rwooga3dservices-e96463f8.koyeb.app",
-]
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', cast=Csv())
+CORS_ALLOW_CREDENTIALS = config('CORS_ALLOW_CREDENTIALS', default=True, cast=bool)
+CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', cast=Csv())
 
 
 # Email Configuration
