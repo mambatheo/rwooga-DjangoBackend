@@ -28,10 +28,10 @@ venv.bak/
 
 # Django
 *.log
-# /media/
-# /staticfiles/
-# /static/
-# local_settings.py
+/media/
+/staticfiles/
+/static/
+ local_settings.py
 
 # PostgreSQL - database dumps and backups
 *.sql
@@ -79,7 +79,7 @@ coverage.xml
 celerybeat-schedule
 celerybeat.pid
 # Logs
-logs/
+# logs/
 
 # Distribution / packaging
 build/
@@ -95,3 +95,7 @@ temp/
 **/migrations/*
 !**/migrations/__init__.py
 
+rwooga-project/
+orders/
+pricing/
+products/

@@ -36,7 +36,7 @@ def send_email_custom(
     template: str,
     context: Dict[str, Any]
 ) -> bool:
-   
+    
     try:
         # Render template in main thread (fast, no I/O)
         html_content = render_to_string(template, context)

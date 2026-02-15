@@ -1,5 +1,5 @@
 import os
-from decouple import config
+from decouple import config, Csv
 from dotenv import load_dotenv
 from datetime import timedelta
 from pathlib import Path
@@ -12,7 +12,8 @@ load_dotenv()
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY')
-DEBUG = config('DEBUG', default=False, cast=bool)
+#DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -35,7 +36,6 @@ INSTALLED_APPS = [
     'drf_spectacular',   
     'accounts.apps.AccountsConfig',
     'orders',
-    'pricing',
     'products',
     'utils',
 ]
@@ -73,7 +73,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'rwoogaBackend.wsgi.application'
 
-# Database Configuration - Optimized for Koyeb + Supabase
+# Database Configuration for production
 if config('DATABASE_URL', default=None):
     DATABASES = {
         'default': dj_database_url.config(
@@ -88,14 +88,14 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('NAME', default='postgres'),
-            'USER': config('USER', default='postgres'),
+            'NAME': config('NAME'),
+            'USER': config('USER'),
             'PASSWORD': config('PASSWORD'),
             'HOST': config('HOST', default='localhost'),
             'PORT': config('PORT', cast=int, default=5432),
             'OPTIONS': {
-                'sslmode': 'require',  
-            },
+                 'sslmode': 'require',  
+             },
             'CONN_MAX_AGE': 600,  
         }
     }
@@ -130,57 +130,55 @@ STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
+
+# Email context variables
+COMPANY_URL = config('COMPANY_URL', default='')
+COMPANY_LOGO_URL = config('COMPANY_LOGO_URL', default='')
+YOUTUBE = config('YOUTUBE', default='https://youtube.com/')
+LINKEDIN = config('LINKEDIN', default='https://linkedin.com')
+INSTAGRAM = config('INSTAGRAM', default='https://www.instagram.com/rwooga.ent')
+TWITTER = config('TWITTER', default='https://x.com/PhedoKat')
+TIKTOK = config('TIKTOK', default='https://www.tiktok.com/@phedish')
+
+# Icon URLs
+YOUTUBE_ICON_URL = config('YOUTUBE_ICON_URL', default='')
+LINKEDIN_ICON_URL = config('LINKEDIN_ICON_URL', default='')
+INSTAGRAM_ICON_URL = config('INSTAGRAM_ICON_URL', default='')
+TWITTER_ICON_URL = config('TWITTER_ICON_URL', default='')
+TIKTOK_ICON_URL = config('TIKTOK_ICON_URL', default='')
+
+STORAGES = {   
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://rwooga-project.vercel.app",
-    "https://rwooga-frontend.vercel.app",
-    "https://modern-noemi-rwooga3dservices-e96463f8.koyeb.app",  
-]
-
-CSRF_TRUSTED_ORIGINS = [
-    "https://rwooga-project.vercel.app",
-    "https://rwooga-frontend.vercel.app",
-    "http://localhost:3000",    
-    "https://modern-noemi-rwooga3dservices-e96463f8.koyeb.app",  
-]
-# Site Configuration
-SITE_URL = config('SITE_URL', default='http://localhost:3000')
-COMPANY_NAME = config('COMPANY_NAME', default='Rwooga')
-SUPPORT_EMAIL = config('SUPPORT_EMAIL', default='support@rwooga.com')
-EMAIL_VERIFICATION_EXPIRY_MINUTES = config('EMAIL_VERIFICATION_EXPIRY_MINUTES', default=30, cast=int)  
-PASSWORD_RESET_EXPIRY_MINUTES = config('PASSWORD_RESET_EXPIRY_MINUTES', default=30, cast=int)  
+# CORS Configuration
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', cast=Csv())
+CORS_ALLOW_CREDENTIALS = config('CORS_ALLOW_CREDENTIALS', default=True, cast=bool)
+CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', cast=Csv())
 
 
 # Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
+# Site Configuration
 
-# Social Media
-YOUTUBE = config('YOUTUBE', default='https://www.youtube.com')
-INSTAGRAM = config('INSTAGRAM', default='https://www.instagram.com')
-LINKEDIN = config('LINKEDIN',default='https://www.linkedin.com')
-TWITTER = config('TWITTER', default='https://www.x.com')
-TIKTOK = config('TIKTOK', default='https://www.tiktok.com')
-COMPANY_URL=config('COMPANY_URL', default='')
+COMPANY_NAME = config('COMPANY_NAME', default='Rwooga')
+SUPPORT_EMAIL = config('SUPPORT_EMAIL', default='support@rwooga.com')
+VERIFICATION_CODE_EXPIRY_MINUTES = config('VERIFICATION_CODE_EXPIRY_MINUTES', default=10, cast=int)
 
-# Logo and Icons
-COMPANY_LOGO_URL = config('COMPANY_LOGO_URL', default='')
-YOUTUBE_ICON_URL = config('YOUTUBE_ICON_URL', default='')
-INSTAGRAM_ICON_URL = config('INSTAGRAM_ICON_URL', default='')
-LINKEDIN_ICON_URL = config('LINKEDIN_ICON_URL', default='')
-TWITTER_ICON_URL = config('TWITTER_ICON_URL', default='')
-TIKTOK_ICON_URL = config('TIKTOK_ICON_URL', default='')
 
 # REST Framework Configuration
 REST_FRAMEWORK = {
@@ -256,3 +254,6 @@ LOGGING = {
         },
     },
 }
+
+
+
