@@ -1,114 +1,320 @@
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework import viewsets, permissions, status, filters
+from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
+from django.utils import timezone
 from .models import Payment
-from .serializers import InitiatePaymentSerializer, PaymentSerializer
-from .paypack_utils import paypack_service
-import uuid
-import time
-import threading
+from .serializers import (
+    PaymentSerializer,
+    MobileMoneyPaymentSerializer,
+    CardPaymentSerializer,
+    PaymentStatusUpdateSerializer,
+)
+from .paypack_utils import paypack_service  # Your existing Paypack integration
 
-def simulate_payment_processing(payment_id):
-    """
-    Simulate backend processing delay and success for CARD payments only
-    """
-    time.sleep(5) # Simulate 5 seconds delay
-    try:
-        payment = Payment.objects.get(id=payment_id)
-        # Mock logic: if amount is 12345, fail it, otherwise succeed
-        if payment.amount == 12345:
-             payment.status = 'failed'
-        else:
-            payment.status = 'successful'
-        payment.save()
-    except Payment.DoesNotExist:
-        pass
 
-@api_view(['POST'])
-@authentication_classes([])
-@permission_classes([AllowAny])
-def initiate_payment(request):
-    serializer = InitiatePaymentSerializer(data=request.data)
-    if serializer.is_valid():
-        data = serializer.validated_data
+class IsAdminOrStaff(permissions.BasePermission):
+    """Allow access only to admin or staff users."""
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated and (
+            request.user.is_staff or getattr(request.user, 'is_admin', False)
+        )
+
+
+class PaymentViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing payments
+    
+    List/Retrieve: Users see their own payments, admins see all
+    Create: Use the custom actions (initiate_momo, initiate_card)
+    """
+    serializer_class = PaymentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['status', 'payment_method', 'provider']
+    search_fields = ['transaction_id', 'phone_number', 'customer_name', 'customer_email']
+    ordering_fields = ['created_at', 'amount', 'status']
+    ordering = ['-created_at']
+    
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Payment.objects.none()
+        if not self.request.user.is_authenticated:
+            return Payment.objects.none()
         
-        # Handle card specifics
-        card_number_masked = None
-        if data.get('paymentMethod') == 'card':
-            card_num = data.get('cardNumber')
-            if card_num:
-                card_number_masked = f"**** **** **** {card_num[-4:]}"
+        user = self.request.user
+        
+        # Admin/staff see all payments
+        if user.is_staff or getattr(user, 'is_admin', False):
+            return Payment.objects.all().select_related('order', 'user')
+        
+        # Regular users see only their own payments
+        return Payment.objects.filter(user=user).select_related('order')
+    
+    def get_permissions(self):
+        """Different permissions for different actions"""
+        if self.action in ('update', 'partial_update', 'destroy'):
+            # Only admins can update/delete payments
+            return [IsAdminOrStaff()]
+        return [permissions.IsAuthenticated()]
+    
+    def create(self, request, *args, **kwargs):
+        """Disable direct create - use initiate_momo or initiate_card instead"""
+        return Response(
+            {
+                'error': 'Use /payments/initiate_momo/ or /payments/initiate_card/ to create payments'
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    @action(detail=False, methods=['post'], url_path='initiate-momo')
+    def initiate_momo(self, request):
+        """
+        Initiate Mobile Money payment
+        
+        POST /api/v1/payments/initiate-momo/
+        {
+            "order": "uuid-of-order",
+            "phone_number": "250788123456",
+            "provider": "paypack",
+            "customer_name": "John Doe",
+            "customer_email": "john@example.com"
+        }
+        """
+        serializer = MobileMoneyPaymentSerializer(
+            data=request.data,
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
         
         # Create payment record
-        transaction_id = data.get('reference') or str(uuid.uuid4())
-        payment = Payment.objects.create(
-            transaction_id=transaction_id,
-            amount=data['amount'],
-            currency=data.get('currency', 'RWF'),
-            payment_method=data.get('paymentMethod', 'momo'),
-            phone_number=data.get('phoneNumber'),
-            card_number_masked=card_number_masked,
-            customer_name=data.get('customerName'),
-            customer_email=data.get('customerEmail'),
-            provider=data.get('provider', 'mtn_rwanda'),
-            status='pending'
-        )
+        payment = serializer.save()
         
-        # Determine payment flow
-        if payment.payment_method == 'momo':
-            # Use Paypack for Mobile Money
-            result = paypack_service.cashin(payment.amount, payment.phone_number)
-            if result['ok']:
-                payment.provider_reference = result['ref']
-                payment.status = result['status'] # usually 'pending'
+        # Initiate payment with Paypack
+        try:
+            result = paypack_service.cashin(
+                amount=float(payment.amount),
+                phone_number=payment.phone_number
+            )
+            
+            if result.get('ok'):
+                # Payment initiated successfully
+                payment.provider_reference = result.get('ref')
+                payment.status = result.get('status', 'pending')
+                payment.provider_response = result
                 payment.save()
-            else:
-                payment.status = 'failed'
-                payment.save()
+                
                 return Response({
-                    'status': 'failed',
-                    'message': result.get('error', 'Payment initiation failed'),
-                    'details': result.get('details')
+                    'transaction_id': payment.transaction_id,
+                    'status': payment.status,
+                    'message': 'Payment initiated successfully. Please check your phone to complete the payment.',
+                    'provider_reference': payment.provider_reference,
+                    'expires_at': payment.expires_at,
+                }, status=status.HTTP_201_CREATED)
+            else:
+                # Payment initiation failed
+                error_message = result.get('error', 'Payment initiation failed')
+                payment.mark_failed(
+                    reason=error_message,
+                    provider_response=result
+                )
+                
+                return Response({
+                    'error': error_message,
+                    'details': result.get('details'),
+                    'transaction_id': payment.transaction_id,
                 }, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            # Keep simulation for Card payments (for now)
-            thread = threading.Thread(target=simulate_payment_processing, args=(payment.id,))
-            thread.start()
+        
+        except Exception as e:
+            # Handle unexpected errors
+            payment.mark_failed(reason=f"System error: {str(e)}")
+            
+            return Response({
+                'error': 'An error occurred while initiating payment',
+                'details': str(e),
+                'transaction_id': payment.transaction_id,
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @action(detail=False, methods=['post'], url_path='initiate-card')
+    def initiate_card(self, request):
+        """
+        Initiate Card payment
+        
+        POST /api/v1/payments/initiate-card/
+        {
+            "order": "uuid-of-order",
+            "payment_token": "token-from-flutterwave",
+            "provider": "flutterwave",
+            "customer_email": "john@example.com"
+        }
+        
+        NOTE: Card details should be collected on frontend using payment gateway's
+        secure form (Flutterwave Inline, Paystack Popup, etc.) and only the token
+        should be sent to backend.
+        """
+        serializer = CardPaymentSerializer(
+            data=request.data,
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        
+        # Create payment record
+        payment = serializer.save()
+        
+        # Here you would integrate with Flutterwave/Paystack to process the card
+        # For now, return the payment record
+        # You should implement actual card processing based on your gateway
         
         return Response({
-            'transactionId': payment.transaction_id,
+            'transaction_id': payment.transaction_id,
             'status': payment.status,
-            'message': 'Payment initiated successfully'
+            'message': 'Card payment is being processed',
+            'payment_id': str(payment.id),
         }, status=status.HTTP_201_CREATED)
     
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['GET'])
-@authentication_classes([])
-@permission_classes([AllowAny])
-def check_payment_status(request, transaction_id):
-    try:
-        payment = Payment.objects.get(transaction_id=transaction_id)
+    @action(detail=True, methods=['get'], url_path='status')
+    def check_status(self, request, pk=None):
+        """
+        Check payment status and update from provider if pending
         
-        # If pending and has provider ref, check real status on Paypack
-        if payment.status == 'pending' and payment.provider_reference and payment.payment_method == 'momo':
-             tx_data = paypack_service.check_status(payment.provider_reference)
-             if tx_data:
-                 new_status = tx_data.get('status')
-                 # Map Paypack status if needed, assuming match for now
-                 if new_status in ['successful', 'failed', 'completed']:
-                     if new_status == 'completed':
-                         new_status = 'successful'
-                     payment.status = new_status
-                     payment.save()
-
+        GET /api/v1/payments/{id}/status/
+        """
+        payment = self.get_object()
+        
+        # If payment is pending and has provider reference, check with Paypack
+        if (payment.status in ['pending', 'processing'] and 
+            payment.provider_reference and 
+            payment.payment_method == 'momo'):
+            
+            try:
+                tx_data = paypack_service.check_status(payment.provider_reference)
+                
+                if tx_data:
+                    new_status = tx_data.get('status')
+                    
+                    # Map Paypack status to our status
+                    if new_status == 'completed':
+                        payment.mark_successful(
+                            provider_reference=payment.provider_reference,
+                            provider_response=tx_data
+                        )
+                    elif new_status == 'failed':
+                        payment.mark_failed(
+                            reason=tx_data.get('message', 'Payment failed'),
+                            provider_response=tx_data
+                        )
+                    elif new_status in ['pending', 'processing']:
+                        payment.status = new_status
+                        payment.provider_response = tx_data
+                        payment.save()
+            
+            except Exception as e:
+                # Log error but don't fail the request
+                pass
+        
+        # Check if payment has expired
+        if payment.expires_at and timezone.now() > payment.expires_at and payment.is_pending:
+            payment.status = 'expired'
+            payment.save()
+        
         return Response({
-            'transactionId': payment.transaction_id,
+            'transaction_id': payment.transaction_id,
             'status': payment.status,
-            'message': f'Payment is {payment.status}'
+            'status_display': payment.get_status_display(),
+            'is_successful': payment.is_successful,
+            'is_pending': payment.is_pending,
+            'can_be_retried': payment.can_be_retried,
+            'amount': payment.amount,
+            'created_at': payment.created_at,
+            'completed_at': payment.completed_at,
+            'failure_reason': payment.failure_reason,
         })
-    except Payment.DoesNotExist:
-        return Response({
-            'message': 'Payment not found'
-        }, status=status.HTTP_404_NOT_FOUND)
+    
+    @action(detail=True, methods=['post'], url_path='cancel')
+    def cancel_payment(self, request, pk=None):
+        """
+        Cancel a pending payment
+        
+        POST /api/v1/payments/{id}/cancel/
+        """
+        payment = self.get_object()
+        
+        # Check user owns the payment
+        if payment.user != request.user and not (
+            request.user.is_staff or getattr(request.user, 'is_admin', False)
+        ):
+            return Response(
+                {'error': 'You do not have permission to cancel this payment.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        if payment.cancel():
+            return Response({
+                'message': 'Payment cancelled successfully',
+                'transaction_id': payment.transaction_id,
+                'status': payment.status,
+            })
+        else:
+            return Response(
+                {
+                    'error': f'Cannot cancel payment with status "{payment.get_status_display()}"',
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    
+    @action(
+        detail=False,
+        methods=['post'],
+        url_path='webhook',
+        permission_classes=[permissions.AllowAny],  # Webhooks come from payment provider
+    )
+    def webhook(self, request):
+        """
+        Webhook endpoint for payment provider callbacks
+        
+        POST /api/v1/payments/webhook/
+        
+        This should be secured with signature verification from your payment provider
+        """
+        # TODO: Verify webhook signature from Paypack/Flutterwave
+        # For Paypack, verify the signature using their documentation
+        
+        data = request.data
+        
+        # Get transaction reference from webhook data
+        # This depends on your payment provider's webhook format
+        provider_reference = data.get('ref') or data.get('reference')
+        
+        if not provider_reference:
+            return Response(
+                {'error': 'No reference provided'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            payment = Payment.objects.get(provider_reference=provider_reference)
+            
+            # Update payment based on webhook data
+            webhook_status = data.get('status')
+            
+            if webhook_status == 'successful' or webhook_status == 'completed':
+                payment.mark_successful(
+                    provider_reference=provider_reference,
+                    provider_response=data
+                )
+            elif webhook_status == 'failed':
+                payment.mark_failed(
+                    reason=data.get('message', 'Payment failed'),
+                    provider_response=data
+                )
+            
+            payment.webhook_data = data
+            payment.save()
+            
+            return Response({'status': 'webhook received'}, status=status.HTTP_200_OK)
+        
+        except Payment.DoesNotExist:
+            return Response(
+                {'error': 'Payment not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )

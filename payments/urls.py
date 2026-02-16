@@ -1,7 +1,10 @@
-from django.urls import path
-from . import views
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import PaymentViewSet
+
+router = DefaultRouter()
+router.register(r'payments', PaymentViewSet, basename='payment')
 
 urlpatterns = [
-    path('momo/initiate/', views.initiate_payment, name='initiate-payment'),
-    path('momo/status/<str:transaction_id>/', views.check_payment_status, name='check-payment-status'),
+    path('', include(router.urls)),
 ]
