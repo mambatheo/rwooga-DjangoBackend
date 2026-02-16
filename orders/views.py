@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 
-from .models import Order, OrderItem, OrderDiscount, Return, Refund
+from .models import Order, OrderItem, OrderDiscount, Return, Refund, Shipping
 from .serializers import (
     OrderSerializer,
     OrderListSerializer,
@@ -11,6 +11,7 @@ from .serializers import (
     OrderUpdateSerializer,
     OrderItemSerializer,
     OrderDiscountSerializer,
+    ShippingSerializer,
     ReturnSerializer,
     ReturnApproveSerializer,
     ReturnRejectSerializer,
@@ -25,6 +26,31 @@ class IsAdminOrStaff(permissions.BasePermission):
         return request.user and request.user.is_authenticated and (
             request.user.is_staff or getattr(request.user, 'is_admin', False)
         )
+
+
+class ShippingViewSet(viewsets.ReadOnlyModelViewSet):
+    
+    serializer_class = ShippingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['district', 'sector', 'street_address', 'shipping_phone']
+    ordering_fields = ['created_at']
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Shipping.objects.none()
+        if not self.request.user.is_authenticated:
+            return Shipping.objects.none()
+
+        user = self.request.user
+
+        # Admin/staff see all shipping addresses
+        if user.is_staff or getattr(user, 'is_admin', False):
+            return Shipping.objects.all()
+
+        # Regular users see only shipping addresses from their own orders
+        return Shipping.objects.filter(orders__user=user).distinct()
 
 
 class OrderViewSet(viewsets.ModelViewSet):
