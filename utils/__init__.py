@@ -1,9 +1,11 @@
 from .registration_verification import send_registration_verification
 from .password_reset_verification import send_password_reset_verification
+from .email_change_verification import send_email_change_verification
 from .send_email import send_email_custom
 
 __all__ = [
     'send_registration_verification',
     'send_password_reset_verification',
+    'send_email_change_verification',
     'send_email_custom',
 ]

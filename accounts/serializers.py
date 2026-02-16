@@ -231,6 +231,101 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         return attrs
 
 
+class EmailChangeRequestSerializer(serializers.Serializer):
+    """
+    Serializer for requesting email change
+    Requires new email and current password for security
+    """
+    new_email = serializers.EmailField(required=True)
+    password = serializers.CharField(required=True, write_only=True)
+    
+    def validate_new_email(self, value):
+        """Validate that new email is not already in use"""
+        # Normalize email
+        value = value.lower().strip()
+        
+        # Check if email already exists
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError(
+                "This email address is already in use."
+            )
+        
+        # Check if it's the same as current email
+        user = self.context['request'].user
+        if user.email.lower() == value:
+            raise serializers.ValidationError(
+                "New email must be different from current email."
+            )
+        
+        return value
+    
+    def validate_password(self, value):
+        """Verify current password"""
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError(
+                "Current password is incorrect."
+            )
+        return value
+
+
+class EmailChangeConfirmSerializer(serializers.Serializer):
+    """
+    Serializer for confirming email change using 6-digit code
+    Requires new email and verification code
+    """
+    new_email = serializers.EmailField(required=True)
+    code = serializers.CharField(required=True, min_length=6, max_length=6)
+    
+    def validate_code(self, value):
+        """Validate that code is 6 digits"""
+        if not value.isdigit():
+            raise serializers.ValidationError("Code must be 6 digits")
+        if len(value) != 6:
+            raise serializers.ValidationError("Code must be exactly 6 digits")
+        return value
+    
+    def validate(self, attrs):
+        """Verify the code and validate email change"""
+        from accounts.models import VerificationCode  # Import here to avoid circular import
+        
+        user = self.context['request'].user
+        new_email = attrs['new_email'].lower().strip()
+        code = attrs['code']
+        
+        # Check if new email is already taken (could have been taken since request)
+        if User.objects.filter(email=new_email).exclude(id=user.id).exists():
+            raise serializers.ValidationError({
+                "new_email": "This email address is already in use."
+            })
+        
+        # Find verification code
+        try:
+            verification = VerificationCode.objects.get(
+                user=user,
+                email=new_email,
+                code=code,
+                label=VerificationCode.EMAIL_CHANGE,
+                is_verified=False
+            )
+        except VerificationCode.DoesNotExist:
+            raise serializers.ValidationError(
+                "Invalid verification code or email."
+            )
+        
+        # Check if expired
+        if verification.is_expired:
+            raise serializers.ValidationError(
+                "Verification code has expired. Please request a new one."
+            )
+        
+        attrs['user'] = user
+        attrs['verification'] = verification
+        attrs['new_email'] = new_email
+        
+        return attrs
+
+
 class UserProfileSerializer(serializers.ModelSerializer):  
     
     class Meta:
