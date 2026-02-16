@@ -23,17 +23,8 @@ class ServiceCategory(models.Model):
         default=False, 
         help_text="Does this service need material specification?"
     )
-    pricing_type = models.CharField(
-        max_length=20,
-        choices=[
-            ('fixed', 'Fixed Price'),
-            ('custom', 'Custom Quote'),
-            
-        ],
-        default='custom'
-    )
-    
-    is_active = models.BooleanField(default=True)
+   
+    is_active = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

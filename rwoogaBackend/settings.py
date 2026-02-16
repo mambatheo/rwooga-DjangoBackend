@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'drf_spectacular',   
     'accounts.apps.AccountsConfig',
     'orders',
+    'payments',
     'products',
     'utils',
 ]
@@ -52,6 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
 ]
  
 ROOT_URLCONF = 'rwoogaBackend.urls'

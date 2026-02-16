@@ -7,10 +7,7 @@ logger = logging.getLogger(__name__)
 
 @receiver(pre_delete, sender=settings.AUTH_USER_MODEL)
 def delete_user_tokens(sender, instance, **kwargs):
-    """
-    Delete all JWT tokens (OutstandingToken and BlacklistedToken) 
-    when a user is deleted
-    """
+   
     try:
         from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
         
@@ -25,10 +22,7 @@ def delete_user_tokens(sender, instance, **kwargs):
 
 @receiver(pre_delete, sender=settings.AUTH_USER_MODEL)
 def delete_user_verification_codes(sender, instance, **kwargs):
-    """
-    Delete all verification codes when a user is deleted
-    (This happens automatically due to CASCADE, but we log it)
-    """
+    
     try:
         from accounts.models import VerificationCode
         
