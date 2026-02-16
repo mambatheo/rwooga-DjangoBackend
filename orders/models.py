@@ -6,6 +6,7 @@ from django.utils import timezone
 
 
 class Shipping(models.Model):
+    """Shipping address information for orders"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     shipping_fee = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     shipping_phone = models.CharField(max_length=20)
@@ -15,11 +16,16 @@ class Shipping(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        verbose_name_plural = "Shipping Addresses"
+        ordering = ['-created_at']
+
     def __str__(self):
         return f"{self.sector}, {self.district}"
 
 
 class Order(models.Model):
+    """Order model with ForeignKey to Shipping"""
     STATUS_CHOICES = [
         ('PENDING', 'Pending'),
         ('PAID', 'Paid'),
@@ -39,7 +45,6 @@ class Order(models.Model):
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     shipping_fee = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
-    tax_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     refunded_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     
     tracking_number = models.CharField(max_length=100, blank=True, null=True)
@@ -68,10 +73,12 @@ class Order(models.Model):
 
     @property
     def final_amount(self):
+        """Calculate final amount after refunds"""
         return self.total_amount - self.refunded_amount
 
     @property
     def can_be_returned(self):
+        """Check if order is eligible for return (within 30 days of delivery)"""
         if self.status != 'DELIVERED' or not self.delivered_at:
             return False
         return (timezone.now() - self.delivered_at).days <= 30
@@ -81,6 +88,7 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
+    """Individual items in an order"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey('products.Product', on_delete=models.PROTECT, related_name='order_items')
@@ -97,10 +105,12 @@ class OrderItem(models.Model):
 
     @property
     def subtotal(self):
+        """Calculate subtotal for this item"""
         return self.price_at_purchase * self.quantity
 
     @property
     def quantity_available_for_return(self):
+        """Calculate quantity available for return"""
         return self.quantity - self.quantity_returned
 
     def __str__(self):
@@ -108,6 +118,7 @@ class OrderItem(models.Model):
 
 
 class OrderDiscount(models.Model):
+    """Discounts applied to orders"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='order_discounts')
     discount = models.ForeignKey(
@@ -127,6 +138,7 @@ class OrderDiscount(models.Model):
 
 
 class Return(models.Model):
+    """Return requests for orders"""
     STATUS_CHOICES = [
         ('REQUESTED', 'Return Requested'),
         ('APPROVED', 'Approved'),
@@ -150,6 +162,11 @@ class Return(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['return_number']),
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['status']),
+        ]
 
     def save(self, *args, **kwargs):
         if not self.return_number:
@@ -159,15 +176,18 @@ class Return(models.Model):
 
     @property
     def is_active(self):
+        """Check if return is still active (not completed, cancelled, or rejected)"""
         return self.status not in ['COMPLETED', 'CANCELLED', 'REJECTED']
 
     def approve(self, amount=None):
+        """Approve the return request"""
         self.status = 'APPROVED'
         self.approved_at = timezone.now()
         self.approved_refund_amount = amount or self.requested_refund_amount
         self.save()
 
     def reject(self, reason):
+        """Reject the return request with a reason"""
         self.status = 'REJECTED'
         self.rejection_reason = reason
         self.save()
@@ -177,6 +197,7 @@ class Return(models.Model):
 
 
 class Refund(models.Model):
+    """Refund transactions"""
     STATUS_CHOICES = [
         ('PENDING', 'Pending'),
         ('COMPLETED', 'Completed'),
@@ -196,6 +217,11 @@ class Refund(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['refund_number']),
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['status']),
+        ]
 
     def save(self, *args, **kwargs):
         if not self.refund_number:
@@ -204,14 +230,18 @@ class Refund(models.Model):
         super().save(*args, **kwargs)
 
     def mark_completed(self, transaction_id=None):
+        """Mark refund as completed and update order"""
         self.status = 'COMPLETED'
         self.completed_at = timezone.now()
         if transaction_id:
             self.transaction_id = transaction_id
         self.save()
         
+        # Update order refunded amount
         self.order.refunded_amount += self.amount
-        self.order.status = 'REFUNDED' if self.order.refunded_amount >= self.order.total_amount else self.order.status
+        # Change order status to REFUNDED if fully refunded
+        if self.order.refunded_amount >= self.order.total_amount:
+            self.order.status = 'REFUNDED'
         self.order.save()
 
     def __str__(self):

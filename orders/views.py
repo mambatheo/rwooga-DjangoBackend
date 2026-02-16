@@ -28,15 +28,7 @@ class IsAdminOrStaff(permissions.BasePermission):
 
 
 class OrderViewSet(viewsets.ModelViewSet):
-    """
-    Full CRUD for Orders.
-    
-    - **list**: Authenticated users see their own orders; admin/staff see all.
-    - **create**: Any authenticated user can place an order.
-    - **retrieve**: Users can view their own order details; admin/staff can view any.
-    - **update/partial_update**: Admin/staff only (status, tracking, etc.).
-    - **cancel**: Users can cancel their own PENDING orders.
-    """
+ 
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['status']
@@ -104,11 +96,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 
 
 class OrderItemViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Read-only viewset for order items.
     
-    Filter by ?order=<order_id>.
-    """
     serializer_class = OrderItemSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -132,11 +120,7 @@ class OrderItemViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class OrderDiscountViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Read-only viewset for order discounts.
     
-    Filter by ?order=<order_id>.
-    """
     serializer_class = OrderDiscountSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -158,17 +142,7 @@ class OrderDiscountViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class ReturnViewSet(viewsets.ModelViewSet):
-    """
-    Manage return requests.
-    
-    - **list**: Users see own returns; admin/staff see all.
-    - **create**: Authenticated users can request a return for delivered orders.
-    - **retrieve**: View return details.
-    - **approve** (admin action): Approve a return with optional refund amount.
-    - **reject** (admin action): Reject a return with a reason.
-    - **complete** (admin action): Mark return as completed.
-    - **cancel_return**: User can cancel their own REQUESTED return.
-    """
+ 
     serializer_class = ReturnSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -274,15 +248,7 @@ class ReturnViewSet(viewsets.ModelViewSet):
 
 
 class RefundViewSet(viewsets.ModelViewSet):
-    """
-    Manage refunds.
-    
-    - **list**: Users see own refunds; admin/staff see all.
-    - **create**: Authenticated users can request a refund for their orders.
-    - **retrieve**: View refund details.
-    - **complete** (admin action): Mark a refund as completed with optional transaction ID.
-    - **fail** (admin action): Mark a refund as failed.
-    """
+   
     serializer_class = RefundSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]

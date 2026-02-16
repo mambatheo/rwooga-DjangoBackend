@@ -4,14 +4,27 @@ from django.utils import timezone
 from .models import Order, OrderItem, OrderDiscount, Return, Refund, Shipping
 from products.models import Product, Discount
 
-class  ShippingSerializer(serializers.ModelSerializer):
-    shipping_fee = serializers.CharField(read_only=True)
-    shipping_telephone = serializers.CharField(max_length=10, read_only=True)
-    district = serializers.CharField(read_only=True)
-    sector = serializers.CharField(read_only=True)
-    street_address = serializers.CharField(read_only=True)
+
+class ShippingSerializer(serializers.ModelSerializer):
+    """Serializer for shipping address information"""
     
+    class Meta:
+        model = Shipping
+        fields = [
+            'id',
+            'shipping_fee',
+            'shipping_phone',
+            'district',
+            'sector',
+            'street_address',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
 class OrderItemSerializer(serializers.ModelSerializer):
+    """Serializer for order items with product details"""
     product_name = serializers.CharField(read_only=True)
     product_slug = serializers.CharField(source='product.slug', read_only=True)
     product_thumbnail = serializers.SerializerMethodField()
@@ -47,9 +60,13 @@ class OrderItemSerializer(serializers.ModelSerializer):
         ]
     
     def get_product_thumbnail(self, obj):
+        """Get product thumbnail with proper context handling"""
         first_media = obj.product.media.first()
         if first_media and first_media.image:
-            return self.context['request'].build_absolute_uri(first_media.image.url)
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(first_media.image.url)
+            return first_media.image.url
         return None
 
 
@@ -59,12 +76,14 @@ class OrderItemCreateSerializer(serializers.Serializer):
     quantity = serializers.IntegerField(min_value=1)
     
     def validate_product(self, value):
+        """Validate product is available for purchase"""
         if not value.published:
             raise serializers.ValidationError("This product is not available for purchase.")
         return value
 
 
 class OrderDiscountSerializer(serializers.ModelSerializer):
+    """Serializer for order discounts"""
     discount_name = serializers.CharField(source='discount.name', read_only=True)
     discount_value = serializers.DecimalField(
         source='discount.discount_value',
@@ -109,6 +128,7 @@ class OrderListSerializer(serializers.ModelSerializer):
         ]
     
     def get_item_count(self, obj):
+        """Get count of items in order"""
         return obj.items.count()
 
 
@@ -116,6 +136,7 @@ class OrderSerializer(serializers.ModelSerializer):
     """Detailed serializer for individual order retrieval"""
     items = OrderItemSerializer(many=True, read_only=True)
     order_discounts = OrderDiscountSerializer(many=True, read_only=True)
+    shipping_address = ShippingSerializer(read_only=True)
     user_name = serializers.CharField(source='user.full_name', read_only=True)
     user_email = serializers.CharField(source='user.email', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
@@ -132,11 +153,10 @@ class OrderSerializer(serializers.ModelSerializer):
             'user_email',
             'total_amount',
             'shipping_fee',
-            'discount_amount',
-            'tax_amount',
+            'discount_amount',          
             'refunded_amount',
-            'final_amount',          
-            'shipping_fee',
+            'final_amount',
+            'shipping_address',
             'tracking_number',
             'customer_notes',
             'status',
@@ -155,8 +175,7 @@ class OrderSerializer(serializers.ModelSerializer):
             'order_number',
             'user',
             'total_amount',
-            'discount_amount',
-            'tax_amount',
+            'discount_amount',      
             'refunded_amount',
             'final_amount',
             'status',
@@ -168,33 +187,47 @@ class OrderSerializer(serializers.ModelSerializer):
         ]
 
 
-class OrderCreateSerializer(serializers.Serializer):
-    """Serializer for creating new orders"""
-    items = OrderItemCreateSerializer(many=True, write_only=True)
-    shipping_address = serializers.CharField()
+class ShippingCreateSerializer(serializers.Serializer):
+    """Serializer for creating shipping address"""
     shipping_phone = serializers.CharField(max_length=20)
-    customer_notes = serializers.CharField(required=False, allow_blank=True)
+    district = serializers.CharField(max_length=100)
+    sector = serializers.CharField(max_length=100)
+    street_address = serializers.CharField(max_length=255, required=False, allow_blank=True)
     shipping_fee = serializers.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    
+    def validate_shipping_fee(self, value):
+        """Validate shipping fee is not negative"""
+        if value < 0:
+            raise serializers.ValidationError("Shipping fee cannot be negative.")
+        return value
+
+
+class OrderCreateSerializer(serializers.Serializer):
+    """Serializer for creating new orders with nested shipping"""
+    items = OrderItemCreateSerializer(many=True, write_only=True)
+    shipping = ShippingCreateSerializer(write_only=True)
+    customer_notes = serializers.CharField(required=False, allow_blank=True)
     discount_code = serializers.CharField(required=False, allow_blank=True, write_only=True)
     
     def validate_items(self, value):
+        """Validate items list"""
         if not value:
             raise serializers.ValidationError("Order must contain at least one item.")
         if len(value) > 50:
             raise serializers.ValidationError("Maximum 50 items per order.")
         return value
     
-    def validate_shipping_fee(self, value):
-        if value < 0:
-            raise serializers.ValidationError("Shipping fee cannot be negative.")
-        return value
-    
     def create(self, validated_data):
+        """Create order with shipping address and items"""
         items_data = validated_data.pop('items')
+        shipping_data = validated_data.pop('shipping')
         discount_code = validated_data.pop('discount_code', None)
         user = self.context['request'].user
         
-        # Calculate subtotal
+        # Step 1: Create Shipping object
+        shipping = Shipping.objects.create(**shipping_data)
+        
+        # Step 2: Calculate subtotal and prepare order items
         subtotal = Decimal('0.00')
         order_items = []
         
@@ -204,7 +237,13 @@ class OrderCreateSerializer(serializers.Serializer):
             
             # Get final price (with product-level discounts if applicable)
             price = product.unit_price
-            active_product_discounts = product.product_discounts.filter(is_valid=True)
+            
+            active_product_discounts = product.product_discounts.filter(
+                discount__is_active=True,
+                discount__start_date__lte=timezone.now(),
+                discount__end_date__gte=timezone.now()
+            )
+            
             if active_product_discounts.exists():
                 discount = active_product_discounts.first().discount
                 if discount.discount_type == 'percentage':
@@ -220,7 +259,7 @@ class OrderCreateSerializer(serializers.Serializer):
                 'price_at_purchase': price,
             })
         
-        # Apply order-level discount if provided
+        # Step 3: Apply order-level discount if provided
         discount_amount = Decimal('0.00')
         discount_obj = None
         
@@ -239,34 +278,32 @@ class OrderCreateSerializer(serializers.Serializer):
             except Discount.DoesNotExist:
                 raise serializers.ValidationError({"discount_code": "Invalid or expired discount code."})
         
-        # Calculate total
-        shipping_fee = validated_data.get('shipping_fee', Decimal('0.00'))
-        tax_amount = Decimal('0.00')  # Calculate tax if needed
-        total_amount = subtotal + shipping_fee + tax_amount - discount_amount
+        # Step 4: Calculate total
+        shipping_fee = shipping_data.get('shipping_fee', Decimal('0.00'))
+        total_amount = subtotal + shipping_fee - discount_amount
         
-        # Create order
+        # Step 5: Create Order with Shipping ForeignKey
         order = Order.objects.create(
             user=user,
+            shipping_address=shipping,
             total_amount=total_amount,
             shipping_fee=shipping_fee,
             discount_amount=discount_amount,
-            tax_amount=tax_amount,
-            shipping_address=validated_data['shipping_address'],
-            shipping_phone=validated_data['shipping_phone'],
             customer_notes=validated_data.get('customer_notes', ''),
         )
         
-        # Create order items
+        # Step 6: Create order items
         for item_data in order_items:
             OrderItem.objects.create(order=order, **item_data)
         
-        # Create order discount if applied
+        # Step 7: Create order discount if applied
         if discount_obj:
             OrderDiscount.objects.create(order=order, discount=discount_obj)
         
         return order
     
     def to_representation(self, instance):
+        """Return detailed order representation"""
         return OrderSerializer(instance, context=self.context).data
 
 
@@ -283,9 +320,9 @@ class OrderUpdateSerializer(serializers.ModelSerializer):
         ]
     
     def update(self, instance, validated_data):
+        """Update order and auto-set timestamps"""
         status = validated_data.get('status')
         
-        # Auto-set timestamps based on status changes
         if status == 'PAID' and not instance.paid_at:
             instance.paid_at = timezone.now()
         elif status == 'SHIPPED' and not instance.shipped_at:
@@ -297,6 +334,7 @@ class OrderUpdateSerializer(serializers.ModelSerializer):
 
 
 class ReturnSerializer(serializers.ModelSerializer):
+    """Serializer for return requests"""
     order_number = serializers.CharField(source='order.order_number', read_only=True)
     user_name = serializers.CharField(source='user.full_name', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
@@ -334,19 +372,17 @@ class ReturnSerializer(serializers.ModelSerializer):
         ]
     
     def validate_order(self, value):
+        """Validate order is eligible for return"""
         user = self.context['request'].user
         
-        # Check ownership
         if value.user != user:
             raise serializers.ValidationError("You can only request returns for your own orders.")
         
-        # Check if order is eligible for return
         if not value.can_be_returned:
             raise serializers.ValidationError(
                 "This order is not eligible for return. Orders can only be returned within 30 days of delivery."
             )
         
-        # Check if there's already an active return for this order
         active_returns = Return.objects.filter(
             order=value,
             status__in=['REQUESTED', 'APPROVED']
@@ -357,11 +393,13 @@ class ReturnSerializer(serializers.ModelSerializer):
         return value
     
     def validate_requested_refund_amount(self, value):
+        """Validate refund amount is positive"""
         if value <= 0:
             raise serializers.ValidationError("Refund amount must be greater than zero.")
         return value
     
     def create(self, validated_data):
+        """Create return request with current user"""
         validated_data['user'] = self.context['request'].user
         return super().create(validated_data)
 
@@ -375,6 +413,7 @@ class ReturnApproveSerializer(serializers.Serializer):
     )
     
     def validate_approved_refund_amount(self, value):
+        """Validate approved amount is positive"""
         if value and value <= 0:
             raise serializers.ValidationError("Approved refund amount must be greater than zero.")
         return value
@@ -385,12 +424,14 @@ class ReturnRejectSerializer(serializers.Serializer):
     rejection_reason = serializers.CharField(required=True)
     
     def validate_rejection_reason(self, value):
+        """Validate rejection reason is provided"""
         if not value.strip():
             raise serializers.ValidationError("Rejection reason is required.")
         return value
 
 
 class RefundSerializer(serializers.ModelSerializer):
+    """Serializer for refunds"""
     order_number = serializers.CharField(source='order.order_number', read_only=True)
     user_name = serializers.CharField(source='user.full_name', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
@@ -423,17 +464,20 @@ class RefundSerializer(serializers.ModelSerializer):
         ]
     
     def validate_amount(self, value):
+        """Validate refund amount is positive"""
         if value <= 0:
             raise serializers.ValidationError("Refund amount must be greater than zero.")
         return value
     
     def validate_order(self, value):
+        """Validate user owns the order"""
         user = self.context['request'].user
         if value.user != user:
             raise serializers.ValidationError("You can only request refunds for your own orders.")
         return value
     
     def create(self, validated_data):
+        """Create refund with current user"""
         validated_data['user'] = self.context['request'].user
         return super().create(validated_data)
 
