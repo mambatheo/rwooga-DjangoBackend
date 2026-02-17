@@ -15,7 +15,7 @@ class FeedbackInline(admin.TabularInline):
 
 @admin.register(ServiceCategory)
 class ServiceCategoryAdmin(admin.ModelAdmin):
-    list_display = ['id', 'name', 'is_active', 'created_at']  # Removed duplicate 'id'
+    list_display = ['id', 'name', 'is_active', 'created_at'] 
     list_filter = ['is_active']
     search_fields = ['name']
     prepopulated_fields = {'slug': ('name',)}
@@ -26,7 +26,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ['id', 'name', 'category', 'unit_price', 'published', 'created_at']
     list_filter = ['published', 'category', 'created_at']
     search_fields = ['name', 'short_description']
-    readonly_fields = ['slug', 'created_at', 'updated_at']  # Removed 'product_volume'
+    readonly_fields = ['slug', 'created_at', 'updated_at']  
     inlines = [ProductMediaInline, FeedbackInline]
     
     fieldsets = (
@@ -37,10 +37,10 @@ class ProductAdmin(admin.ModelAdmin):
             'fields': ('unit_price', 'currency')
         }),
         ('Dimensions', {
-            'fields': ('length', 'width', 'height', 'measurement_unit', 'material')  # Removed 'product_volume'
+            'fields': ('length', 'width', 'height', 'measurement_unit') 
         }),
         ('Product Variations', {
-            'fields': ('available_sizes', 'available_colors', 'available_materials'),  # Removed duplicate
+            'fields': ('available_sizes', 'available_colors', 'available_materials'),  
             'description': 'Enter comma-separated values (e.g., Small, Medium, Large)'
         }),
         ('Publishing', {
