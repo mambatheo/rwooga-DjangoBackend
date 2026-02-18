@@ -228,7 +228,7 @@ SIMPLE_JWT = {
 # API Documentation Configuration
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Rwooga Backend API',
-    'DESCRIPTION': 'API for user authentication and 3D services',
+    'DESCRIPTION': 'API for user authentication , payments, orders and listing products',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
