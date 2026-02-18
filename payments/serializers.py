@@ -182,7 +182,7 @@ class MobileMoneyPaymentSerializer(serializers.Serializer):
             idempotency_key=idempotency_key,
             expires_at=timezone.now() + timezone.timedelta(minutes=10),
             ip_address=request.META.get('REMOTE_ADDR'),
-            user_agent=request.META.get('HTTP_USER_AGENT', '')[:500],  # Limit length
+            user_agent=request.META.get('HTTP_USER_AGENT', '')[:500],  
         )
         
         return payment

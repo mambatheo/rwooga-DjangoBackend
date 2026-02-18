@@ -132,9 +132,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
         # Create payment record
         payment = serializer.save()
         
-        # Here you would integrate with IremoboPay/Paystack to process the card
-        # For now, return the payment record
-        # You should implement actual card processing based on your gateway
+       
         
         return Response({
             'transaction_id': payment.transaction_id,
