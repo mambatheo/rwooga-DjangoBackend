@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',  
     'corsheaders',
     'django_extensions',
+    'django-storages',
     'django_filters',
     'drf_spectacular',   
     'accounts.apps.AccountsConfig',
