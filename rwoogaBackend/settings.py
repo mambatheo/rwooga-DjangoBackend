@@ -74,7 +74,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'rwoogaBackend.wsgi.application'
-
 # Database Configuration for production
 if config('DATABASE_URL', default=None):
     DATABASES = {
@@ -101,6 +100,8 @@ else:
             'CONN_MAX_AGE': 600,  
         }
     }
+
+ 
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

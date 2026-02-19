@@ -125,7 +125,7 @@ class ProductMedia(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product = models.ForeignKey(
         Product,
-        related_name="media",
+        related_name="product_media",
         on_delete=models.CASCADE
     )
 
@@ -153,14 +153,14 @@ class ProductMedia(models.Model):
         verbose_name = "Product Media"
         verbose_name_plural = "Product Media"
 
-    def clean(self):
-        if not any([self.image, self.video_file, self.video_url, self.model_3d]):
-            raise ValidationError('At least one media file (image, video, or 3D model) must be provided.')
+    # def clean(self):
+    #     if not any([self.image, self.video_file, self.video_url, self.model_3d]):
+    #         raise ValidationError('At least one media file (image, video, or 3D model) must be provided.')
+        
     def __str__(self):
-        return f"Media for {self.product.name}"
+        return self.product.name
 
-    def __str__(self):
-        return f"{self.product.name} - Media {self.display_order}"
+ 
 
 class Feedback(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

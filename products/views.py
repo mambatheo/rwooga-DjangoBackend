@@ -52,10 +52,10 @@ class ProductViewSet(viewsets.ModelViewSet):
     ordering_fields = ['unit_price', 'created_at', 'name']
     ordering = ['-created_at']
 
-    def get_serializer_class(self):
-        if self.action == 'list':
-            return ProductListSerializer
-        return ProductSerializer
+    # def get_serializer_class(self):
+    #     if self.action == 'list':
+    #         return ProductListSerializer
+    #     return ProductSerializer
     
     def get_queryset(self):
         qs = super().get_queryset()
@@ -74,6 +74,14 @@ class ProductViewSet(viewsets.ModelViewSet):
             qs = qs.filter(unit_price__lte=max_price)
 
         return qs
+    
+    def create(self,request):
+        print(request.FILES)
+        serializer=self.serializer_class(data=request.data,context={"request":request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data,status=status.HTTP_201_CREATED)
+        
 
     @action(detail=True, methods=["post"])
     def publish(self, request, pk=None):
@@ -101,6 +109,8 @@ class ProductMediaViewSet(viewsets.ModelViewSet):
         if product_id:
             qs = qs.filter(product_id=product_id)
         return qs
+    
+
 
 @extend_schema(tags=["Feedback on Product"])
 class FeedbackViewSet(viewsets.ModelViewSet):
