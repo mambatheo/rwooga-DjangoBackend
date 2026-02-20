@@ -156,9 +156,7 @@ class OrderSerializer(serializers.ModelSerializer):
             'discount_amount',          
             'refunded_amount',
             'final_amount',
-            'shipping_address',
-            'tracking_number',
-            'customer_notes',
+            'shipping_address',                       
             'status',
             'status_display',
             'can_be_returned',
@@ -206,8 +204,7 @@ class OrderCreateSerializer(serializers.Serializer):
     """Serializer for creating new orders with nested shipping"""
     items = OrderItemCreateSerializer(many=True, write_only=True)
     shipping = ShippingCreateSerializer(write_only=True)
-    customer_notes = serializers.CharField(required=False, allow_blank=True)
-    discount_code = serializers.CharField(required=False, allow_blank=True, write_only=True)
+  
     
     def validate_items(self, value):
         """Validate items list"""
@@ -289,7 +286,7 @@ class OrderCreateSerializer(serializers.Serializer):
             total_amount=total_amount,
             shipping_fee=shipping_fee,
             discount_amount=discount_amount,
-            customer_notes=validated_data.get('customer_notes', ''),
+           
         )
         
         # Step 6: Create order items
