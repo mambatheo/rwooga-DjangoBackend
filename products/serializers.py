@@ -46,7 +46,8 @@ class ProductSerializer(serializers.ModelSerializer):
     media_details = serializers.SerializerMethodField()
     average_rating = serializers.FloatField(read_only=True)
     final_price = serializers.SerializerMethodField()
-    images = serializers.ListField(child = serializers.ImageField(),read_only=True)
+    images = serializers.ListField(child = serializers.ImageField(),write_only=True,
+                                   required=False)
     
     class Meta:
         model = Product
@@ -157,7 +158,7 @@ class ProductSerializer(serializers.ModelSerializer):
         return obj.unit_price
     
     def create(self,validated_data):
-        images=self.initial_data.pop("images")
+        images=self.initial_data.pop("images", [])
         product_saved=Product.objects.create(**validated_data)
         for image in images:
             mn=ProductMedia.objects.create(product=product_saved,image=image)
