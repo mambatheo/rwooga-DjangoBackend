@@ -264,7 +264,7 @@ class WishlistItemSerializer(serializers.ModelSerializer):
     
    
     def get_product_thumbnail(self, obj) -> str:
-        first_media = obj.product.media.first()
+        first_media = obj.product.product_media.first()
         if first_media and first_media.image:
             return first_media.image.url
         return None

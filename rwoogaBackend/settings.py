@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'payments',
     'products',
     'utils',
+    'cloudinary',
+    'cloudinary_storage',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
@@ -155,16 +157,26 @@ TIKTOK_ICON_URL = config('TIKTOK_ICON_URL', default='')
 
 
 
-STORAGES = {  
+ # settings.py
+ 
+
+STORAGES = {
     "default": {
-        # "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
-        "BACKEND": "django.core.files.storage.FileSystemStorage"
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage"
+        if not DEBUG else
+        "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
 
+# Cloudinary config — add these to your .env and Koyeb env vars
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY':    os.getenv('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
+}
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
